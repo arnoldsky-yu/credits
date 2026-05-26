@@ -14,11 +14,13 @@ The public reader-facing documentation should be written in Traditional Chinese 
 ## Data Authority
 
 - Official historical event websites are the evidence source for event contribution records.
-- Google Sheets is the operational canonical dataset after records are collected and reviewed.
+- Google Sheets is the operational canonical dataset after records are collected, reviewed, and accepted by maintainers.
 - GitHub Pages is the intended public output.
 - GitHub Actions is the intended export/build path from the controlled dataset to the static site.
 
 Do not describe planned infrastructure as already implemented. If a Sheet, Form, Action, schema, or deployment does not exist yet, document it as planned or `TBD`.
+
+If official event websites and the reviewed canonical Sheet disagree, public output should follow the maintainer-reviewed canonical Sheet. Do not resolve conflicts yourself unless the repository documentation or a maintainer explicitly gives the rule for that case.
 
 ## Scope
 
@@ -28,7 +30,9 @@ The initial scope includes staff and speakers for SITCON-related events, includi
 - SITCON Camp
 - Hour of Code
 - Hackathons
-- Other SITCON-run or SITCON-maintained community events
+- Other SITCON-run, co-run, formally branded, or long-term maintained community events
+
+Partnered, sponsored, or loosely related community events are not automatically in scope. Ask maintainers before adding ambiguous event types.
 
 Do not expand the default scope to general attendees, rejected submissions, sponsor contacts, or other private/non-public roles unless the repository documentation is updated first.
 
@@ -54,6 +58,14 @@ Never merge identities automatically based only on:
 
 If an identity match is uncertain, keep records separate and report the uncertainty.
 
+Maintainer-approved means one of:
+
+- an explicit instruction from a repository maintainer
+- a merged pull request that makes or accepts the identity link
+- a reviewed value in the canonical Sheet
+
+Agent memory, similar names, unreviewed form submissions, or unreviewed Sheet rows are not maintainer approval.
+
 ## Privacy and Removal Policy
 
 Historical records that were already published on official event websites are not hidden by default in this project.
@@ -66,6 +78,37 @@ People may request changes to the profile layer:
 - correct wrong roles, event names, or source URLs
 
 If a person does not want a consolidated profile, unlink the profile from the historical appearances instead of deleting the event records. If the original source is wrong, prefer correcting the source or documenting a better source.
+
+Do not invent a policy that hides, deletes, or rewrites historical event records. If the user asks for a policy change, treat it as a documentation/policy change request and keep the distinction between event records and profile data explicit.
+
+## Data Minimization
+
+Public historical records should only include data needed for the event contribution index, such as event name, year or edition, role, public display name, source URL, and profile-link status.
+
+Do not publish private email addresses, phone numbers, addresses, identity documents, internal contact information, non-opt-in social accounts, or unrelated private information.
+
+Internal Google Workspace documents may be used as maintenance leads, but access to an internal document does not make its contents publishable. Data should be published only when it comes from a public event source, reviewed canonical data, or opt-in profile input.
+
+## Human Review Required
+
+Stop and ask a maintainer before making or accepting changes involving:
+
+- adding, changing, or splitting a `person_id` identity link
+- expanding event scope beyond the documented scope
+- expanding person scope beyond staff and speakers
+- resolving a conflict between official websites, archives, old repos, Google Sheets, or other sources
+- processing requests to remove profile data or unlink a profile from historical appearances
+- changing the privacy, removal, or historical-record retention policy
+
+LLM agents may identify candidates, summarize evidence, and mark items for review. They must not make the final decision for the cases above.
+
+## Source and Access Limits
+
+If you cannot access a Sheet, Form, source page, archive, or repo, say that the information is unknown or unavailable. Do not fill gaps from memory or inference.
+
+When sources conflict, preserve the uncertainty and route the decision to maintainers. Do not silently choose the most convenient source.
+
+If a source is outside this repository, do not claim that it has been corrected. You may document the discrepancy or propose a follow-up.
 
 ## Agent Operating Rules
 
@@ -83,4 +126,3 @@ If a person does not want a consolidated profile, unlink the profile from the hi
 - `AGENTS.md` is the local instruction entrypoint for LLM agents.
 - Future technical docs should distinguish planned behavior from implemented behavior.
 - When adding data model docs later, describe the minimum fields, source-of-truth rules, and maintenance flow before adding automation.
-
