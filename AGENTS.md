@@ -22,6 +22,8 @@ Do not describe planned infrastructure as already implemented. If a Sheet, Form,
 
 If official event websites and the reviewed canonical Sheet disagree, public output should follow the maintainer-reviewed canonical Sheet. Do not resolve conflicts yourself unless the repository documentation or a maintainer explicitly gives the rule for that case.
 
+Low-risk self-service profile updates may be planned as a GitHub PR workflow, but do not describe that automation as active until the repository has the corresponding schema, validation workflow, branch protection or ruleset, and merge permissions configured.
+
 ## Scope
 
 The initial scope includes staff and speakers for SITCON-related events, including but not limited to:
@@ -81,6 +83,21 @@ If a person does not want a consolidated profile, unlink the profile from the hi
 
 Do not invent a policy that hides, deletes, or rewrites historical event records. If the user asks for a policy change, treat it as a documentation/policy change request and keep the distinction between event records and profile data explicit.
 
+## Self-Service Profile PRs
+
+Future automation may allow a contributor to update a profile file that corresponds to their own GitHub user id. This is only appropriate for low-risk, opt-in profile fields such as preferred display name, biography, avatar, and public links.
+
+Before any self-service PR may be auto-accepted, the repository should have validation that confirms:
+
+- the PR author matches the GitHub user id represented by the profile filename
+- the PR changes only that contributor's own profile file
+- the changed fields are limited to the approved profile schema
+- the PR does not add, change, split, or infer a `person_id`
+- the PR does not change historical event records, roles, source URLs, or event scope
+- the PR does not process profile removal, unlinking, or privacy policy changes
+
+Passing a filename or GitHub user id check is not identity-merge approval. It must not be used to link appearances, consolidate profiles, or resolve source conflicts.
+
 ## Data Minimization
 
 Public historical records should only include data needed for the event contribution index, such as event name, year or edition, role, public display name, source URL, and profile-link status.
@@ -99,6 +116,8 @@ Stop and ask a maintainer before making or accepting changes involving:
 - resolving a conflict between official websites, archives, old repos, Google Sheets, or other sources
 - processing requests to remove profile data or unlink a profile from historical appearances
 - changing the privacy, removal, or historical-record retention policy
+
+Self-service profile PR automation must route the cases above to maintainer review instead of auto-accepting them.
 
 LLM agents may identify candidates, summarize evidence, and mark items for review. They must not make the final decision for the cases above.
 
