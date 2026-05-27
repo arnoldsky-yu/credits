@@ -20,7 +20,7 @@ The public reader-facing documentation should be written in Traditional Chinese 
 
 Do not describe planned infrastructure as already implemented. If a Sheet, Form, Action, schema, or deployment does not exist yet, document it as planned or `TBD`.
 
-A service account may be planned so repository maintainers and GitHub Actions can operate the controlled Google Sheet, including syncing validation helper sheets, configuring validation, exporting data, or running checks. Do not describe that service account, its credentials, or related workflows as active until they exist in the repository and Google Workspace configuration.
+Repository tools may use maintainer-provided service account credentials to operate the controlled Google Sheet, including initializing sheets, syncing validation helper sheets, configuring validation, exporting data, or running checks. Do not describe GitHub Actions automation, secrets, credentials, or related workflows as active until they exist in the repository and Google Workspace configuration.
 
 Service account credentials and other secrets may exist locally for maintainers, but they must not be committed or read by LLM agents. In particular, do not open, inspect, parse, copy, summarize, or print files such as `credentials.json`, `*credentials*.json`, `*service-account*.json`, `.env`, or `.env.*`. If a task requires confirming secret presence, use file metadata, `.gitignore`, or `git status` only; do not read the secret contents.
 
@@ -127,6 +127,8 @@ Source URLs should usually live on `events`:
 - Use `staff_source_url` for staff records.
 - Use `speaker_source_url` for speaker records.
 - Use `appearances.source_url_override` only when a specific appearance has a different source from the event-level source.
+
+Repository tooling may manage Google Sheets structure from `config/sheets.json`. LLM agents may run dry-run or static validation commands that do not read credentials, such as `pnpm sheets:init:dry-run` or `node --check scripts/sheets/init.mjs`. Do not run credentialed Google Sheets commands locally, such as `pnpm sheets:init`, unless the user explicitly asks for that exact action and the command can run without exposing secret contents.
 
 ## Data Minimization
 

@@ -1,0 +1,12 @@
+{
+  "name": "sitcon-credits",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sheets:init": "node scripts/sheets/init.mjs",
+    "sheets:init:dry-run": "node scripts/sheets/init.mjs --dry-run"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

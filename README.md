@@ -47,7 +47,7 @@ JSON 或 Git-tracked data 對 diff、review 與歷史追蹤有優勢，但如果
 
 Google Sheets 預期只維護活動出現紀錄、活動清單，以及由 GitHub Actions 產生的 people 參照清單。profile 內容應以 GitHub repository 中的個人資料檔案為準；只要 GitHub 中已有對應檔案，就不需要在 Google Sheets 另外維護一份重複的個人簡介狀態。Google Sheets 中的 `github_username` 欄位只用來把某筆活動出現紀錄連到已確認的個人資料檔案。
 
-未來可建立 service account，讓 repo 維護者與 GitHub Actions 能依照受控流程操作 Google Sheets，例如同步 `people` 參照清單、設定資料驗證規則、匯出 canonical data，或執行資料檢查。service account、對應 workflow 與權限設定尚未建立前，文件應將這些能力描述為規劃中，而不是已啟用。
+repo 工具可透過維護者提供的 service account credentials 依照受控流程操作 Google Sheets，例如初始化表格、設定資料驗證規則、同步 `people` 參照清單、匯出 canonical data，或執行資料檢查。GitHub Actions 對應 workflow、secret 與權限設定尚未建立前，文件應將 CI 自動化描述為規劃中，而不是已啟用。
 
 目前預期的資料流程：
 
@@ -99,6 +99,33 @@ Google Sheets 預期只維護活動出現紀錄、活動清單，以及由 GitHu
 
 - Google Sheet：https://docs.google.com/spreadsheets/d/1L2drpIE2ocZF3Stba9X0DnLGmYi_igeGWUhaQB_evsQ/edit?gid=0#gid=0
 - GitHub Pages：TBD
+
+## Google Sheets 工具
+
+本 repo 提供 Google Sheets 初始化工具，讓表格結構、欄位標題與基本資料驗證可以由 repo 管理，減少手動設定。
+
+工具設定放在 `config/sheets.json`，目前會管理：
+
+- `appearances`
+- `events`
+- `people`
+
+本機執行前，維護者需要先將 service account JSON 放在不會被 commit 的本機路徑，例如 repo 根目錄的 `credentials.json`，並確認 Google Sheet 已分享給該 service account 的 email。
+
+可先檢查工具將套用的設定：
+
+```bash
+pnpm sheets:init:dry-run
+```
+
+確認後再執行初始化：
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="$PWD/credentials.json"
+pnpm sheets:init
+```
+
+`sheets:init` 會建立缺少的工作表、更新第一列欄位名稱、凍結標題列、設定欄寬，並設定 `appearances.event_id`、`appearances.github_username` 與 `events.scope_status` 的基本資料驗證。這個工具不會清空既有資料列。
 
 ## 資料最小化
 

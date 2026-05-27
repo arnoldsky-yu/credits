@@ -1,0 +1,72 @@
+{
+  "spreadsheetId": "1L2drpIE2ocZF3Stba9X0DnLGmYi_igeGWUhaQB_evsQ",
+  "sheets": [
+    {
+      "title": "appearances",
+      "rowCount": 1000,
+      "columns": [
+        "event_id",
+        "role_group_zh",
+        "role_group_en",
+        "role_title_zh",
+        "role_title_en",
+        "display_name_at_event",
+        "github_username",
+        "source_url_override",
+        "notes"
+      ],
+      "validations": [
+        {
+          "column": "event_id",
+          "type": "ONE_OF_RANGE",
+          "range": "events!$A$2:$A",
+          "strict": true
+        },
+        {
+          "column": "github_username",
+          "type": "ONE_OF_RANGE",
+          "range": "people!$A$2:$A",
+          "strict": true
+        }
+      ]
+    },
+    {
+      "title": "events",
+      "rowCount": 300,
+      "columns": [
+        "event_id",
+        "event_series",
+        "event_name_zh",
+        "event_name_en",
+        "event_year",
+        "event_edition",
+        "scope_status",
+        "official_site_url",
+        "staff_source_url",
+        "speaker_source_url",
+        "notes"
+      ],
+      "validations": [
+        {
+          "column": "scope_status",
+          "type": "ONE_OF_LIST",
+          "values": [
+            "收錄",
+            "需確認",
+            "不收錄"
+          ],
+          "strict": true
+        }
+      ]
+    },
+    {
+      "title": "people",
+      "rowCount": 1000,
+      "columns": [
+        "github_username",
+        "display_name"
+      ],
+      "validations": []
+    }
+  ]
+}

@@ -3,3 +3,4 @@ credentials.json
 *service-account*.json
 .env
 .env.*
+node_modules/
