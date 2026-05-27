@@ -39,25 +39,12 @@
         "event_name_zh",
         "event_name_en",
         "event_year",
-        "event_edition",
-        "scope_status",
         "official_site_url",
         "staff_source_url",
         "speaker_source_url",
         "notes"
       ],
-      "validations": [
-        {
-          "column": "scope_status",
-          "type": "ONE_OF_LIST",
-          "values": [
-            "收錄",
-            "需確認",
-            "不收錄"
-          ],
-          "strict": true
-        }
-      ]
+      "validations": []
     },
     {
       "title": "people",

@@ -74,15 +74,13 @@ repo 工具可透過維護者提供的 service account credentials 依照受控�
 
 `role_group_*` 與 `role_title_*` 都是對外呈現的人類可讀文字，不是隱藏代碼。英文欄位若留空，網站或匯出流程應直接沿用對應中文欄位；不應自動翻譯，也不需要因英文欄位留空產生資料品質報告。
 
-`events` 是活動清單與收錄範圍表，用來讓活動名稱、年份、屆次與來源維持一致。預期欄位包含：
+`events` 是活動清單表，用來讓活動名稱、年份與來源維持一致。預期欄位包含：
 
 - `event_id`：活動識別值，供 `appearances` 參照。
 - `event_series`：活動系列，例如 SITCON 年會、SITCON Camp 或 Hour of Code。
 - `event_name_zh`：中文公開顯示的活動名稱。
 - `event_name_en`：英文公開顯示的活動名稱；若留空，英文頁面直接沿用 `event_name_zh`。
 - `event_year`：活動年份。
-- `event_edition`：屆次或期別；若該活動沒有屆次可留空。
-- `scope_status`：是否屬於目前收錄範圍，例如 `收錄` 或 `需確認`。
 - `official_site_url`：活動官網或主要公開來源。
 - `staff_source_url`：該活動工作人員紀錄的主要公開來源 URL；若與 `speaker_source_url` 相同，可以填相同網址。
 - `speaker_source_url`：該活動講者紀錄的主要公開來源 URL；若與 `staff_source_url` 相同，可以填相同網址。
@@ -127,14 +125,14 @@ export GOOGLE_APPLICATION_CREDENTIALS="$PWD/credentials.json"
 pnpm sheets:init
 ```
 
-`sheets:init` 會建立缺少的工作表、更新第一列欄位名稱、凍結標題列、設定欄寬，並設定 `appearances.event_id`、`appearances.github_username` 與 `events.scope_status` 的基本資料驗證。這個工具不會清空既有資料列。
+`sheets:init` 會建立缺少的工作表、更新第一列欄位名稱、凍結標題列、設定欄寬，並設定 `appearances.event_id` 與 `appearances.github_username` 的基本資料驗證。這個工具不會清空既有資料列。
 
 ## 資料最小化
 
 本專案只應公開完成貢獻紀錄索引所需的資料。歷史活動紀錄原則上只需要活動脈絡中的必要資訊，例如：
 
 - 活動名稱
-- 年份或屆次
+- 年份
 - 角色
 - 當時公開顯示名稱
 - 來源 URL

@@ -107,7 +107,7 @@ Passing a filename or GitHub username check is not identity-merge approval. It m
 The expected operational sheets are:
 
 - `appearances`: maintainer-edited public contribution appearances.
-- `events`: maintainer-edited event metadata, scope, and event-level source URLs.
+- `events`: maintainer-edited event metadata and event-level source URLs.
 - `people`: a GitHub Actions-generated validation helper with only `github_username` and `display_name`.
 
 Do not add a separate identity identifier for profile links. Historical appearances link to profile files through `github_username`.
@@ -132,7 +132,7 @@ Repository tooling may manage Google Sheets structure from `config/sheets.json`.
 
 ## Data Minimization
 
-Public historical records should only include data needed for the event contribution index, such as event name, year or edition, role, public display name, source URL, and profile-link status.
+Public historical records should only include data needed for the event contribution index, such as event name, year, role, public display name, source URL, and profile-link status.
 
 Do not publish private email addresses, phone numbers, addresses, identity documents, internal contact information, non-opt-in social accounts, or unrelated private information.
 
