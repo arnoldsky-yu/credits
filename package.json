@@ -1,10 +1,12 @@
 {
   "name": "sitcon-credits",
   "private": true,
+  "packageManager": "pnpm@10.18.0",
   "type": "module",
   "scripts": {
-    "sheets:init": "node scripts/sheets/init.mjs",
-    "sheets:init:dry-run": "node scripts/sheets/init.mjs --dry-run"
+    "preinstall": "node scripts/ensure-pnpm.mjs",
+    "sheets:init": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs",
+    "sheets:init:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs --dry-run"
   },
   "engines": {
     "node": ">=18"

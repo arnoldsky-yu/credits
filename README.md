@@ -104,6 +104,8 @@ repo 工具可透過維護者提供的 service account credentials 依照受控�
 
 本 repo 提供 Google Sheets 初始化工具，讓表格結構、欄位標題與基本資料驗證可以由 repo 管理，減少手動設定。
 
+本 repo 的 Node.js 工具統一使用 pnpm。請不要使用 npm、yarn 或 bun 執行安裝或產生 lockfile。
+
 工具設定放在 `config/sheets.json`，目前會管理：
 
 - `appearances`
