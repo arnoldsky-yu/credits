@@ -55,7 +55,7 @@ JSON 或 Git-tracked data 對 diff、review 與歷史追蹤有優勢，但如果
 
 相關入口：
 
-- Google Sheet：TBD
+- Google Sheet：https://docs.google.com/spreadsheets/d/1L2drpIE2ocZF3Stba9X0DnLGmYi_igeGWUhaQB_evsQ/edit?gid=0#gid=0
 - Google Form：TBD
 - GitHub Pages：TBD
 
