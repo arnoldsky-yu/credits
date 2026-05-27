@@ -128,7 +128,7 @@ Source URLs should usually live on `events`:
 - Use `speaker_source_url` for speaker records.
 - Use `appearances.source_url_override` only when a specific appearance has a different source from the event-level source.
 
-Repository tooling may manage Google Sheets structure from `config/sheets.json`. Use `pnpm` for all package-manager operations and package scripts. Do not use npm, yarn, or bun, and do not create or commit `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`, or `bun.lockb`. LLM agents may run dry-run or static validation commands that do not read credentials, such as `pnpm sheets:init:dry-run` or `node --check scripts/sheets/init.mjs`. Do not run credentialed Google Sheets commands locally, such as `pnpm sheets:init`, unless the user explicitly asks for that exact action and the command can run without exposing secret contents.
+Repository tooling may manage Google Sheets structure, header notes, and validation rules from `config/sheets.json`. Use `pnpm` for all package-manager operations and package scripts. Do not use npm, yarn, or bun, and do not create or commit `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`, or `bun.lockb`. LLM agents may run dry-run or static validation commands that do not read credentials, such as `pnpm sheets:init:dry-run` or `node --check scripts/sheets/init.mjs`. Do not run credentialed Google Sheets commands locally, such as `pnpm sheets:init`, unless the user explicitly asks for that exact action and the command can run without exposing secret contents.
 
 ## Data Minimization
 

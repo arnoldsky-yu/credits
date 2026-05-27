@@ -100,7 +100,7 @@ repo 工具可透過維護者提供的 service account credentials 依照受控�
 
 ## Google Sheets 工具
 
-本 repo 提供 Google Sheets 初始化工具，讓表格結構、欄位標題與基本資料驗證可以由 repo 管理，減少手動設定。
+本 repo 提供 Google Sheets 初始化工具，讓表格結構、欄位標題、欄位說明與基本資料驗證可以由 repo 管理，減少手動設定。
 
 本 repo 的 Node.js 工具統一使用 pnpm。請不要使用 npm、yarn 或 bun 執行安裝或產生 lockfile。
 
@@ -125,7 +125,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="$PWD/credentials.json"
 pnpm sheets:init
 ```
 
-`sheets:init` 會建立缺少的工作表、更新第一列欄位名稱、凍結標題列、設定欄寬，並設定 `appearances.event_id` 與 `appearances.github_username` 的基本資料驗證。這個工具不會清空既有資料列。
+`sheets:init` 會建立缺少的工作表、更新第一列欄位名稱、在欄位標題留下說明 note、凍結標題列、設定欄寬，並設定 `appearances.event_id` 與 `appearances.github_username` 的基本資料驗證。這個工具不會清空既有資料列。
 
 ## 資料最小化
 

@@ -89,10 +89,14 @@ function validateConfig(config) {
     }
     const seenColumns = new Set();
     for (const column of sheet.columns) {
-      if (seenColumns.has(column)) {
-        throw new Error(`Sheet ${sheet.title} has duplicate column ${column}.`);
+      const name = columnNameFromConfig(column);
+      if (!name) {
+        throw new Error(`Sheet ${sheet.title} has a column without a name.`);
       }
-      seenColumns.add(column);
+      if (seenColumns.has(name)) {
+        throw new Error(`Sheet ${sheet.title} has duplicate column ${name}.`);
+      }
+      seenColumns.add(name);
     }
     for (const validation of sheet.validations ?? []) {
       if (!seenColumns.has(validation.column)) {
@@ -105,7 +109,15 @@ function validateConfig(config) {
 function printPlan(config) {
   console.log(`Spreadsheet: ${config.spreadsheetId}`);
   for (const sheet of config.sheets) {
-    console.log(`- ${sheet.title}: ${sheet.columns.join(', ')}`);
+    const columnNames = getColumnNames(sheet);
+    console.log(`- ${sheet.title}: ${columnNames.join(', ')}`);
+    for (const column of sheet.columns) {
+      const name = columnNameFromConfig(column);
+      const note = columnNoteFromConfig(column);
+      if (note) {
+        console.log(`  note ${name}: ${note}`);
+      }
+    }
     for (const validation of sheet.validations ?? []) {
       const target = validation.type === 'ONE_OF_RANGE'
         ? validation.range
@@ -125,7 +137,7 @@ function buildAddSheetRequests(config, existingSheets) {
           index,
           gridProperties: {
             rowCount: sheet.rowCount ?? 1000,
-            columnCount: sheet.columns.length,
+            columnCount: getColumnNames(sheet).length,
             frozenRowCount: 1,
           },
         },
@@ -143,8 +155,9 @@ function buildFormatRequests(config, sheetsByTitle) {
     }
 
     const sheetId = properties.sheetId;
+    const columnNames = getColumnNames(sheet);
     const rowCount = Math.max(sheet.rowCount ?? 1000, properties.gridProperties?.rowCount ?? 0);
-    const columnCount = Math.max(sheet.columns.length, properties.gridProperties?.columnCount ?? 0);
+    const columnCount = Math.max(columnNames.length, properties.gridProperties?.columnCount ?? 0);
 
     requests.push({
       updateSheetProperties: {
@@ -167,7 +180,7 @@ function buildFormatRequests(config, sheetsByTitle) {
           startRowIndex: 0,
           endRowIndex: 1,
           startColumnIndex: 0,
-          endColumnIndex: sheet.columns.length,
+          endColumnIndex: columnNames.length,
         },
         cell: {
           userEnteredFormat: {
@@ -190,7 +203,7 @@ function buildFormatRequests(config, sheetsByTitle) {
           sheetId,
           dimension: 'COLUMNS',
           startIndex: 0,
-          endIndex: sheet.columns.length,
+          endIndex: columnNames.length,
         },
         properties: {
           pixelSize: 180,
@@ -199,8 +212,30 @@ function buildFormatRequests(config, sheetsByTitle) {
       },
     });
 
+    for (const [index, column] of sheet.columns.entries()) {
+      const note = columnNoteFromConfig(column);
+      if (!note) {
+        continue;
+      }
+      requests.push({
+        repeatCell: {
+          range: {
+            sheetId,
+            startRowIndex: 0,
+            endRowIndex: 1,
+            startColumnIndex: index,
+            endColumnIndex: index + 1,
+          },
+          cell: {
+            note,
+          },
+          fields: 'note',
+        },
+      });
+    }
+
     for (const validation of sheet.validations ?? []) {
-      const columnIndex = sheet.columns.indexOf(validation.column);
+      const columnIndex = columnNames.indexOf(validation.column);
       requests.push({
         setDataValidation: {
           range: {
@@ -247,9 +282,9 @@ function buildValidationRule(validation) {
 
 async function updateHeaders(config, accessToken) {
   const data = config.sheets.map((sheet) => ({
-    range: `${quoteSheetName(sheet.title)}!A1:${columnName(sheet.columns.length)}1`,
+    range: `${quoteSheetName(sheet.title)}!A1:${spreadsheetColumnName(getColumnNames(sheet).length)}1`,
     majorDimension: 'ROWS',
-    values: [sheet.columns],
+    values: [getColumnNames(sheet)],
   }));
 
   await sheetsFetch(`${SHEETS_API}/${config.spreadsheetId}/values:batchUpdate`, accessToken, {
@@ -335,7 +370,19 @@ function quoteSheetName(name) {
   return `'${name.replaceAll("'", "''")}'`;
 }
 
-function columnName(count) {
+function getColumnNames(sheet) {
+  return sheet.columns.map((column) => columnNameFromConfig(column));
+}
+
+function columnNameFromConfig(column) {
+  return typeof column === 'string' ? column : column.name;
+}
+
+function columnNoteFromConfig(column) {
+  return typeof column === 'string' ? '' : (column.note ?? '');
+}
+
+function spreadsheetColumnName(count) {
   let n = count;
   let name = '';
   while (n > 0) {

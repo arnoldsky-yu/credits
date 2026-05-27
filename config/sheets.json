@@ -5,15 +5,42 @@
       "title": "appearances",
       "rowCount": 1000,
       "columns": [
-        "event_id",
-        "role_group_zh",
-        "role_group_en",
-        "role_title_zh",
-        "role_title_en",
-        "display_name_at_event",
-        "github_username",
-        "source_url_override",
-        "notes"
+        {
+          "name": "event_id",
+          "note": "對應 events 表中的 event_id。用來把這筆貢獻紀錄連到一場已建立的活動。"
+        },
+        {
+          "name": "role_group_zh",
+          "note": "中文粗略角色類型，例如「工作人員」或「講者」。這是對外顯示文字，不是隱藏代碼。"
+        },
+        {
+          "name": "role_group_en",
+          "note": "英文粗略角色類型，例如 Staff 或 Speaker。若留空，英文頁面直接沿用 role_group_zh。"
+        },
+        {
+          "name": "role_title_zh",
+          "note": "中文角色名稱。盡量保留活動網站或公開來源中的原始脈絡。"
+        },
+        {
+          "name": "role_title_en",
+          "note": "英文角色名稱。若留空，英文頁面直接沿用 role_title_zh；不要自動翻譯。"
+        },
+        {
+          "name": "display_name_at_event",
+          "note": "該活動當時公開顯示的名稱。不同年份或活動可能使用不同名稱，請保留當時脈絡。"
+        },
+        {
+          "name": "github_username",
+          "note": "經維護者確認後，連到 GitHub repository 中對應個人資料檔案的 GitHub username。可用 people 表輔助選取。"
+        },
+        {
+          "name": "source_url_override",
+          "note": "只有這筆紀錄的來源不同於 events 表中的活動層級來源時才填寫。通常可留空。"
+        },
+        {
+          "name": "notes",
+          "note": "維護所需的補充說明。不要放私人 email、電話、內部聯絡資訊或未同意公開的社群帳號。"
+        }
       ],
       "validations": [
         {
@@ -34,15 +61,42 @@
       "title": "events",
       "rowCount": 300,
       "columns": [
-        "event_id",
-        "event_series",
-        "event_name_zh",
-        "event_name_en",
-        "event_year",
-        "official_site_url",
-        "staff_source_url",
-        "speaker_source_url",
-        "notes"
+        {
+          "name": "event_id",
+          "note": "活動識別值，供 appearances.event_id 參照。建議使用穩定、可讀的英文小寫 ID，例如 sitcon-2026。"
+        },
+        {
+          "name": "event_series",
+          "note": "活動系列，例如 SITCON 年會、SITCON Camp、Hour of Code 或 Hackathon。"
+        },
+        {
+          "name": "event_name_zh",
+          "note": "中文公開顯示的活動名稱。"
+        },
+        {
+          "name": "event_name_en",
+          "note": "英文公開顯示的活動名稱。若留空，英文頁面直接沿用 event_name_zh。"
+        },
+        {
+          "name": "event_year",
+          "note": "活動年份，用西元年，例如 2026。"
+        },
+        {
+          "name": "official_site_url",
+          "note": "活動官網或主要公開來源。"
+        },
+        {
+          "name": "staff_source_url",
+          "note": "工作人員紀錄的主要公開來源 URL。若講者與工作人員來源相同，可與 speaker_source_url 填相同網址。"
+        },
+        {
+          "name": "speaker_source_url",
+          "note": "講者紀錄的主要公開來源 URL。若工作人員與講者來源相同，可與 staff_source_url 填相同網址。"
+        },
+        {
+          "name": "notes",
+          "note": "活動層級維護備註。不要放私人或內部聯絡資訊。"
+        }
       ],
       "validations": []
     },
@@ -50,8 +104,14 @@
       "title": "people",
       "rowCount": 1000,
       "columns": [
-        "github_username",
-        "display_name"
+        {
+          "name": "github_username",
+          "note": "對應 GitHub repository 中的個人資料檔案，也是 appearances.github_username 的參照來源。這張表由工具產生，不手動維護 profile 內容。"
+        },
+        {
+          "name": "display_name",
+          "note": "供 Google Sheets 操作者辨識用的顯示名稱。profile 正式內容仍以 GitHub repository 中的個人資料檔案為準。"
+        }
       ],
       "validations": []
     }
