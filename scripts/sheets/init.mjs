@@ -34,7 +34,7 @@ async function main() {
 
   const accessToken = await getAccessToken(credentialsPath);
   const spreadsheet = await sheetsFetch(
-    `${SHEETS_API}/${config.spreadsheetId}?fields=sheets(properties(sheetId,title,gridProperties))`,
+    `${SHEETS_API}/${config.spreadsheetId}?fields=sheets(properties(sheetId,title,gridProperties),conditionalFormats)`,
     accessToken,
   );
 
@@ -49,12 +49,18 @@ async function main() {
 
   const refreshedSpreadsheet = addRequests.length > 0
     ? await sheetsFetch(
-      `${SHEETS_API}/${config.spreadsheetId}?fields=sheets(properties(sheetId,title,gridProperties))`,
+      `${SHEETS_API}/${config.spreadsheetId}?fields=sheets(properties(sheetId,title,gridProperties),conditionalFormats)`,
       accessToken,
     )
     : spreadsheet;
   const sheetsByTitle = new Map(
-    (refreshedSpreadsheet.sheets ?? []).map((sheet) => [sheet.properties.title, sheet.properties]),
+    (refreshedSpreadsheet.sheets ?? []).map((sheet) => [
+      sheet.properties.title,
+      {
+        ...sheet.properties,
+        conditionalFormats: sheet.conditionalFormats ?? [],
+      },
+    ]),
   );
 
   const formatRequests = buildFormatRequests(config, sheetsByTitle);
@@ -103,6 +109,28 @@ function validateConfig(config) {
         throw new Error(`Sheet ${sheet.title} validation references unknown column ${validation.column}.`);
       }
     }
+    for (const conditionalFormat of sheet.conditionalFormats ?? []) {
+      if (!seenColumns.has(conditionalFormat.column)) {
+        throw new Error(
+          `Sheet ${sheet.title} conditional format references unknown column ${conditionalFormat.column}.`,
+        );
+      }
+      if (!conditionalFormat.formula) {
+        throw new Error(`Sheet ${sheet.title} conditional format on ${conditionalFormat.column} needs a formula.`);
+      }
+      validateColor(conditionalFormat.backgroundColor, `Sheet ${sheet.title} conditional format backgroundColor`);
+    }
+  }
+}
+
+function validateColor(color, label) {
+  if (!color || typeof color !== 'object') {
+    throw new Error(`${label} is required.`);
+  }
+  for (const key of ['red', 'green', 'blue']) {
+    if (typeof color[key] !== 'number' || color[key] < 0 || color[key] > 1) {
+      throw new Error(`${label}.${key} must be a number between 0 and 1.`);
+    }
   }
 }
 
@@ -122,7 +150,12 @@ function printPlan(config) {
       const target = validation.type === 'ONE_OF_RANGE'
         ? validation.range
         : (validation.values ?? []).join(', ');
-      console.log(`  validation ${validation.column}: ${validation.type} ${target}`);
+      console.log(`  validation ${validation.column}: ${validation.type} ${target} strict=${validation.strict ?? true}`);
+    }
+    for (const conditionalFormat of sheet.conditionalFormats ?? []) {
+      console.log(
+        `  conditional format ${conditionalFormat.column}: ${conditionalFormat.formula}`,
+      );
     }
   }
 }
@@ -249,9 +282,54 @@ function buildFormatRequests(config, sheetsByTitle) {
         },
       });
     }
+
+    if (Array.isArray(sheet.conditionalFormats)) {
+      for (const index of conditionalFormatRuleIndexes(properties).reverse()) {
+        requests.push({
+          deleteConditionalFormatRule: {
+            sheetId,
+            index,
+          },
+        });
+      }
+
+      for (const conditionalFormat of sheet.conditionalFormats) {
+        const columnIndex = columnNames.indexOf(conditionalFormat.column);
+        requests.push({
+          addConditionalFormatRule: {
+            rule: {
+              ranges: [
+                {
+                  sheetId,
+                  startRowIndex: 1,
+                  endRowIndex: rowCount,
+                  startColumnIndex: columnIndex,
+                  endColumnIndex: columnIndex + 1,
+                },
+              ],
+              booleanRule: {
+                condition: {
+                  type: 'CUSTOM_FORMULA',
+                  values: [{ userEnteredValue: conditionalFormat.formula }],
+                },
+                format: {
+                  backgroundColor: conditionalFormat.backgroundColor,
+                },
+              },
+            },
+            index: 0,
+          },
+        });
+      }
+    }
   }
 
   return requests;
+}
+
+function conditionalFormatRuleIndexes(sheetProperties) {
+  const count = sheetProperties.conditionalFormats?.length ?? 0;
+  return Array.from({ length: count }, (_, index) => index);
 }
 
 function buildValidationRule(validation) {

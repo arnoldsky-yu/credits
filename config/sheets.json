@@ -31,7 +31,7 @@
         },
         {
           "name": "github_username",
-          "note": "經維護者確認後，連到 GitHub repository 中對應個人資料檔案的 GitHub username。可用 people 表輔助選取。"
+          "note": "GitHub username。可選 people 表中已有 profile 的帳號，也可填尚未建立 profile 的帳號，供後續 GitHub Actions 建立空白 profile template。"
         },
         {
           "name": "source_url_override",
@@ -53,7 +53,19 @@
           "column": "github_username",
           "type": "ONE_OF_RANGE",
           "range": "people!$A$2:$A",
-          "strict": true
+          "strict": false
+        }
+      ],
+      "conditionalFormats": [
+        {
+          "column": "github_username",
+          "formula": "=AND($G2<>\"\",COUNTIF(INDIRECT(\"people!$A$2:$A\"),$G2)=0)",
+          "backgroundColor": {
+            "red": 1,
+            "green": 0.95,
+            "blue": 0.8
+          },
+          "description": "Highlight GitHub usernames that do not have a profile entry in people yet."
         }
       ]
     },
@@ -106,14 +118,26 @@
       "columns": [
         {
           "name": "github_username",
-          "note": "對應 GitHub repository 中的個人資料檔案，也是 appearances.github_username 的參照來源。這張表由工具產生，不手動維護 profile 內容。"
+          "note": "對應 GitHub repository 中的個人資料檔案，也是 appearances.github_username 的選取提示來源。這張表由工具產生，不手動維護 profile 內容。"
         },
         {
           "name": "display_name",
           "note": "供 Google Sheets 操作者辨識用的顯示名稱。profile 正式內容仍以 GitHub repository 中的個人資料檔案為準。"
         }
       ],
-      "validations": []
+      "validations": [],
+      "conditionalFormats": [
+        {
+          "column": "github_username",
+          "formula": "=AND($A2<>\"\",COUNTIF(INDIRECT(\"appearances!$G$2:$G\"),$A2)=0)",
+          "backgroundColor": {
+            "red": 0.88,
+            "green": 0.94,
+            "blue": 1
+          },
+          "description": "Highlight profile usernames that are not used by any appearance yet."
+        }
+      ]
     }
   ]
 }
