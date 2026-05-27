@@ -22,6 +22,8 @@ Do not describe planned infrastructure as already implemented. If a Sheet, Form,
 
 A service account may be planned so repository maintainers and GitHub Actions can operate the controlled Google Sheet, including syncing validation helper sheets, configuring validation, exporting data, or running checks. Do not describe that service account, its credentials, or related workflows as active until they exist in the repository and Google Workspace configuration.
 
+Service account credentials and other secrets may exist locally for maintainers, but they must not be committed or read by LLM agents. In particular, do not open, inspect, parse, copy, summarize, or print files such as `credentials.json`, `*credentials*.json`, `*service-account*.json`, `.env`, or `.env.*`. If a task requires confirming secret presence, use file metadata, `.gitignore`, or `git status` only; do not read the secret contents.
+
 If official event websites and the reviewed canonical Sheet disagree, public output should follow the maintainer-reviewed canonical Sheet. Do not resolve conflicts yourself unless the repository documentation or a maintainer explicitly gives the rule for that case.
 
 Low-risk self-service profile updates may be planned as a GitHub PR workflow, but do not describe that automation as active until the repository has the corresponding schema, validation workflow, branch protection or ruleset, and merge permissions configured.
