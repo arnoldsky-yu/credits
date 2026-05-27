@@ -76,7 +76,7 @@ repo 工具可透過維護者提供的 service account credentials 依照受控�
 
 `events` 是活動清單表，用來讓活動名稱、年份與來源維持一致。預期欄位包含：
 
-- `event_id`：活動識別值，供 `appearances` 參照。
+- `event_id`：活動識別值，供 `appearances` 參照。建議使用穩定、可讀的 ASCII ID，品牌縮寫保留慣用大小寫，例如 `SITCON-2026` 或 `SITCON-Camp-2026`。
 - `event_series`：活動系列，例如 SITCON 年會、SITCON Camp 或 Hour of Code。
 - `event_name_zh`：中文公開顯示的活動名稱。
 - `event_name_en`：英文公開顯示的活動名稱；若留空，英文頁面直接沿用 `event_name_zh`。

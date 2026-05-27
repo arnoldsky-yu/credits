@@ -63,7 +63,7 @@
       "columns": [
         {
           "name": "event_id",
-          "note": "活動識別值，供 appearances.event_id 參照。建議使用穩定、可讀的英文小寫 ID，例如 sitcon-2026。"
+          "note": "活動識別值，供 appearances.event_id 參照。建議使用穩定、可讀的 ASCII ID，品牌縮寫保留慣用大小寫，例如 SITCON-2026 或 SITCON-Camp-2026。"
         },
         {
           "name": "event_series",
