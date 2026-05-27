@@ -116,8 +116,10 @@ Do not treat the `people` sheet as the canonical profile source. It is derived f
 
 Role fields are reader-facing labels:
 
-- `role_group_zh` and `role_group_en` are broad public role labels.
-- `role_title_zh` and `role_title_en` are public role titles.
+- `role_group_zh` and `role_group_en` are public group or session-type labels. For staff records, use the staff team or group. For speaker records, use the talk/session type such as Keynote, Panel, or session.
+- `role_title_zh` and `role_title_en` are public identity labels within that group or session. For staff records, use labels such as team lead or member. For speaker records, use labels such as speaker, moderator, or panelist.
+- Do not use `role_group_zh` or `role_group_en` as a staff/speaker classification field.
+- Do not add `contribution_type` or another classification column unless repository documentation is updated first.
 - If an English role field is blank, English output should fall back to the corresponding Traditional Chinese field.
 - Do not auto-translate missing English role fields.
 - Do not create a data-quality report only because an English role field is blank.
