@@ -20,6 +20,8 @@ The public reader-facing documentation should be written in Traditional Chinese 
 
 Do not describe planned infrastructure as already implemented. If a Sheet, Form, Action, schema, or deployment does not exist yet, document it as planned or `TBD`.
 
+A service account may be planned so repository maintainers and GitHub Actions can operate the controlled Google Sheet, including syncing validation helper sheets, configuring validation, exporting data, or running checks. Do not describe that service account, its credentials, or related workflows as active until they exist in the repository and Google Workspace configuration.
+
 If official event websites and the reviewed canonical Sheet disagree, public output should follow the maintainer-reviewed canonical Sheet. Do not resolve conflicts yourself unless the repository documentation or a maintainer explicitly gives the rule for that case.
 
 Low-risk self-service profile updates may be planned as a GitHub PR workflow, but do not describe that automation as active until the repository has the corresponding schema, validation workflow, branch protection or ruleset, and merge permissions configured.
@@ -45,7 +47,7 @@ Identity matching is sensitive. The same person may appear under different names
 Use an appearance-first model:
 
 - Preserve each public event appearance as its own record when needed.
-- Link appearances to a shared `person_id` only when a maintainer has accepted that identity merge.
+- Link appearances to a GitHub username profile only when a maintainer has accepted that identity link.
 - Maintainer judgment is allowed, especially during initial dataset construction.
 - Preserve existing maintainer-approved identity links unless the user explicitly asks to review or change them.
 
@@ -85,18 +87,44 @@ Do not invent a policy that hides, deletes, or rewrites historical event records
 
 ## Self-Service Profile PRs
 
-Future automation may allow a contributor to update a profile file that corresponds to their own GitHub user id. This is only appropriate for low-risk, opt-in profile fields such as preferred display name, biography, avatar, and public links.
+Future automation may allow a contributor to update a profile file that corresponds to their own GitHub username. This is only appropriate for low-risk, opt-in profile fields such as preferred display name, biography, avatar, and public links.
 
 Before any self-service PR may be auto-accepted, the repository should have validation that confirms:
 
-- the PR author matches the GitHub user id represented by the profile filename
+- the PR author matches the GitHub username represented by the profile filename
 - the PR changes only that contributor's own profile file
 - the changed fields are limited to the approved profile schema
-- the PR does not add, change, split, or infer a `person_id`
+- the PR does not add, change, split, or infer historical appearance links
 - the PR does not change historical event records, roles, source URLs, or event scope
 - the PR does not process profile removal, unlinking, or privacy policy changes
 
-Passing a filename or GitHub user id check is not identity-merge approval. It must not be used to link appearances, consolidate profiles, or resolve source conflicts.
+Passing a filename or GitHub username check is not identity-merge approval. It must not be used to link appearances, consolidate profiles, or resolve source conflicts.
+
+## Google Sheets Model
+
+The expected operational sheets are:
+
+- `appearances`: maintainer-edited public contribution appearances.
+- `events`: maintainer-edited event metadata, scope, and event-level source URLs.
+- `people`: a GitHub Actions-generated validation helper with only `github_username` and `display_name`.
+
+Do not add a separate identity identifier for profile links. Historical appearances link to profile files through `github_username`.
+
+Do not treat the `people` sheet as the canonical profile source. It is derived from GitHub repository profile files and exists only to help Google Sheets operators validate `appearances.github_username`.
+
+Role fields are reader-facing labels:
+
+- `role_group_zh` and `role_group_en` are broad public role labels.
+- `role_title_zh` and `role_title_en` are public role titles.
+- If an English role field is blank, English output should fall back to the corresponding Traditional Chinese field.
+- Do not auto-translate missing English role fields.
+- Do not create a data-quality report only because an English role field is blank.
+
+Source URLs should usually live on `events`:
+
+- Use `staff_source_url` for staff records.
+- Use `speaker_source_url` for speaker records.
+- Use `appearances.source_url_override` only when a specific appearance has a different source from the event-level source.
 
 ## Data Minimization
 
@@ -110,7 +138,7 @@ Internal Google Workspace documents may be used as maintenance leads, but access
 
 Stop and ask a maintainer before making or accepting changes involving:
 
-- adding, changing, or splitting a `person_id` identity link
+- adding, changing, or splitting a historical appearance link to a GitHub username profile
 - expanding event scope beyond the documented scope
 - expanding person scope beyond staff and speakers
 - resolving a conflict between official websites, archives, old repos, Google Sheets, or other sources
