@@ -41,6 +41,10 @@ Google Sheets 是經整理與審核後的主要發布資料源。若歷屆官網
 
 SITCON 現役工作人員可依照既有 Google Workspace 權限管理方式維護工作表與表單。Google Form 送出的資料不應直接發布，應先進入審核佇列，經維護者確認後才進入 canonical Sheet。未來網站預期由 GitHub Actions 讀取受控資料來源，產生靜態資料並部署到 GitHub Pages。
 
+本專案不把所有資料都放在同一種維護介面中，而是依資料類型分工。年度活動的工作人員與講者紀錄通常由行政或活動工作人員整理，Google Sheets 較符合 SITCON 既有 Google Workspace 工作流程，也能讓不熟 GitHub 的未來行政組長直接整理當年度資料。個人公開簡介則較適合放在 GitHub repo 中，讓本人或維護者透過 Pull Request 更新，保留較清楚的 review 與變更歷史。
+
+JSON 或 Git-tracked data 對 diff、review 與歷史追蹤有優勢，但如果把年度貢獻紀錄全部改成手寫 JSON，會提高非工程背景維護者的資料整理成本。因此現階段的取捨是：貢獻紀錄由 Google Sheets 承擔主要維護流程；本人 opt-in 的個人簡介與公開連結，則以 GitHub PR 流程作為較適合的長期方向。
+
 目前預期的資料流程：
 
 1. 從歷屆官網或其他公開活動頁面整理工作人員與講者紀錄。
