@@ -50,6 +50,7 @@ Use an appearance-first model:
 
 - Preserve each public event appearance as its own record when needed.
 - Link appearances to a GitHub username profile only when a maintainer has accepted that identity link.
+- `appearances.github_username` may temporarily contain a GitHub username that does not yet have a repository profile file when maintainers use it to trigger future blank profile-template creation.
 - Maintainer judgment is allowed, especially during initial dataset construction.
 - Preserve existing maintainer-approved identity links unless the user explicitly asks to review or change them.
 
@@ -91,6 +92,10 @@ Do not invent a policy that hides, deletes, or rewrites historical event records
 
 Future automation may allow a contributor to update a profile file that corresponds to their own GitHub username. This is only appropriate for low-risk, opt-in profile fields such as preferred display name, biography, avatar, and public links.
 
+Future automation may also create blank profile templates for GitHub usernames found in `appearances.github_username` when the corresponding profile file does not exist yet. The template should be empty or placeholder-only; it must not invent profile details, identity evidence, biographies, avatars, links, aliases, or historical appearance links.
+
+Existing contributors may open a GitHub PR to create or fill their own profile and state which historical appearances they believe are theirs. Treat that PR as a signal of intent and evidence for maintainer review, not as automatic approval to merge identities or rewrite historical records.
+
 Before any self-service PR may be auto-accepted, the repository should have validation that confirms:
 
 - the PR author matches the GitHub username represented by the profile filename
@@ -108,11 +113,19 @@ The expected operational sheets are:
 
 - `appearances`: maintainer-edited public contribution appearances.
 - `events`: maintainer-edited event metadata and event-level source URLs.
-- `people`: a GitHub Actions-generated validation helper with only `github_username` and `display_name`.
+- `people`: a GitHub Actions-generated selection helper with only `github_username` and `display_name`.
 
 Do not add a separate identity identifier for profile links. Historical appearances link to profile files through `github_username`.
 
-Do not treat the `people` sheet as the canonical profile source. It is derived from GitHub repository profile files and exists only to help Google Sheets operators validate `appearances.github_username`.
+Do not treat the `people` sheet as the canonical profile source or a closed allowlist. It is derived from GitHub repository profile files and exists to help Google Sheets operators choose known usernames while still allowing `appearances.github_username` to contain not-yet-created profile usernames.
+
+`appearances.github_username` validation should not be strict against `people`. A username outside `people` means either a blank profile template still needs to be created, or a maintainer still needs to review a contributor's requested link. It is not by itself proof that the profile exists or that an identity link has been accepted.
+
+Use conditional formatting to make username states visible to Sheet operators:
+
+- Highlight `appearances.github_username` values that are not present in `people.github_username`.
+- Highlight `people.github_username` values that are not used by any `appearances.github_username`.
+- Treat these highlights as maintenance prompts, not errors or identity decisions.
 
 Role fields are reader-facing labels:
 
