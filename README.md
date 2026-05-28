@@ -100,7 +100,7 @@ repo 工具可透過維護者提供的 service account credentials 依照受控�
 
 ## Google Sheets 工具
 
-本 repo 提供 Google Sheets 初始化與匯出工具，讓表格結構、欄位標題、欄位說明、基本資料驗證與後續輸出可以由 repo 管理，減少手動設定。
+本 repo 提供 Google Sheets 初始化、匯出與本地驗證工具，讓表格結構、欄位標題、欄位說明、基本資料驗證與後續資料品質檢查可以由 repo 管理，減少手動設定。
 
 本 repo 的 Node.js 工具統一使用 pnpm。請不要使用 npm、yarn 或 bun 執行安裝或產生 lockfile。
 
@@ -152,9 +152,33 @@ pnpm sheets:export:dry-run
 
 `tmp/` 是本機產物，不應提交到 Git。
 
+### 驗證匯出資料
+
+匯出後可執行：
+
+```bash
+pnpm data:validate
+```
+
+`data:validate` 只讀取本機 `tmp/sheets-export/export.json` 與 repo 內的 `config/sheets.json`，不會連線 Google Sheets，也不會讀取 service account credentials。它目前會檢查：
+
+- 匯出內容是否包含 `appearances`、`events` 與 `people`，且欄位順序與 `config/sheets.json` 一致。
+- `appearances.event_id` 是否存在於 `events.event_id`。
+- `events.event_id` 與 `people.github_username` 是否重複。
+- 重要欄位是否空白，例如活動 ID、活動名稱、活動年份、中文角色欄位與活動當時公開顯示名稱。
+- URL 欄位是否為有效的 `http` 或 `https` URL。
+- `github_username` 是否符合 GitHub username 的基本格式。
+- `appearances.github_username` 是否尚未出現在 `people`，以及 `people.github_username` 是否沒有被任何 appearance 使用。
+- `notes`、顯示名稱等欄位是否疑似含有 email 或電話等不應公開的聯絡資訊。
+- `role_group_zh` 或 `role_group_en` 是否疑似被填成 staff/speaker 分類，而不是公開組別或場次類型。
+
+英文欄位空白不是錯誤。英文輸出應在後續建置階段 fallback 到對應的繁體中文欄位，不應自動翻譯。
+
+驗證結果分成 error 與 warning。error 代表資料目前不適合進入公開輸出；warning 是維護提示，不代表工具已做出身份合併、profile 連結或資料政策判斷。`appearances.github_username` 尚未出現在 `people` 是 warning，不是錯誤，因為它可能只是等待建立空白 profile template 或等待維護者後續審查。
+
 ### 本地工具測試
 
-不讀取憑證也不連線 Google Sheets 的匯出工具邏輯，可以用 Node.js 內建測試執行：
+不讀取憑證也不連線 Google Sheets 的工具邏輯，可以用 Node.js 內建測試執行：
 
 ```bash
 pnpm test
