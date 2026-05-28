@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "preinstall": "node scripts/ensure-pnpm.mjs",
+    "test": "node scripts/ensure-pnpm.mjs && node --test scripts/sheets/export.test.mjs",
+    "sheets:export": "node scripts/ensure-pnpm.mjs && node scripts/sheets/export.mjs",
+    "sheets:export:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/export.mjs --dry-run",
     "sheets:init": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs",
     "sheets:init:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs --dry-run"
   },

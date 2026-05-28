@@ -100,7 +100,7 @@ repo 工具可透過維護者提供的 service account credentials 依照受控�
 
 ## Google Sheets 工具
 
-本 repo 提供 Google Sheets 初始化工具，讓表格結構、欄位標題、欄位說明與基本資料驗證可以由 repo 管理，減少手動設定。
+本 repo 提供 Google Sheets 初始化與匯出工具，讓表格結構、欄位標題、欄位說明、基本資料驗證與後續輸出可以由 repo 管理，減少手動設定。
 
 本 repo 的 Node.js 工具統一使用 pnpm。請不要使用 npm、yarn 或 bun 執行安裝或產生 lockfile。
 
@@ -126,6 +126,39 @@ pnpm sheets:init
 ```
 
 `sheets:init` 會建立缺少的工作表、更新第一列欄位名稱、在欄位標題留下說明 note、凍結標題列、設定欄寬，並設定 `appearances.event_id` 與 `appearances.github_username` 的基本資料驗證。`event_id` 驗證會要求選擇既有活動；`github_username` 驗證會顯示 `people` 表中的既有 profile 作為選取提示，但允許填入尚未建立 profile 的 username。工具也會設定條件格式：`appearances.github_username` 若不在 `people` 中，會用底色提醒需要建立 profile template；`people.github_username` 若沒有被任何 appearance 使用，會用另一種底色提醒維護者檢查。這個工具不會清空既有資料列。
+
+### 匯出 Google Sheets 資料
+
+`sheets:export` 會從 canonical Google Sheet 讀取 `appearances`、`events` 與 `people`，並輸出到本機 `tmp/sheets-export/`。這個指令只讀取 Google Sheets，不會修改工作表內容。
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="$PWD/credentials.json"
+pnpm sheets:export
+```
+
+匯出結果包含：
+
+- `tmp/sheets-export/export.json`：後續驗證與建置使用的完整資料。
+- `tmp/sheets-export/appearances.json` 與 `appearances.csv`
+- `tmp/sheets-export/events.json` 與 `events.csv`
+- `tmp/sheets-export/people.json` 與 `people.csv`
+- `tmp/sheets-export/summary.json`
+
+若只想確認匯出設定，不讀取憑證也不連線 Google Sheets，可以執行：
+
+```bash
+pnpm sheets:export:dry-run
+```
+
+`tmp/` 是本機產物，不應提交到 Git。
+
+### 本地工具測試
+
+不讀取憑證也不連線 Google Sheets 的匯出工具邏輯，可以用 Node.js 內建測試執行：
+
+```bash
+pnpm test
+```
 
 ## 資料最小化
 
