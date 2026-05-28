@@ -1,11 +1,17 @@
-import crypto from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { getServiceAccountAccessToken } from '../lib/google-auth.mjs';
+import { SHEETS_API, sheetsFetch } from '../lib/google-sheets-api.mjs';
+import {
+  DEFAULT_CONFIG_PATH,
+  columnNameFromConfig,
+  columnNoteFromConfig,
+  getColumnNames,
+  quoteSheetName,
+  readSheetsConfig,
+  spreadsheetColumnName,
+} from '../lib/sheets-config.mjs';
 
-const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
-const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 
-const DEFAULT_CONFIG_PATH = 'config/sheets.json';
 const HEADER_BACKGROUND = { red: 0.09, green: 0.19, blue: 0.33 };
 const HEADER_FOREGROUND = { red: 1, green: 1, blue: 1 };
 
@@ -19,8 +25,7 @@ main().catch((error) => {
 });
 
 async function main() {
-  const config = JSON.parse(await readFile(configPath, 'utf8'));
-  validateConfig(config);
+  const config = await readSheetsConfig(configPath);
 
   if (dryRun) {
     printPlan(config);
@@ -32,7 +37,7 @@ async function main() {
     throw new Error('GOOGLE_APPLICATION_CREDENTIALS must point to a local service account JSON file.');
   }
 
-  const accessToken = await getAccessToken(credentialsPath);
+  const accessToken = await getServiceAccountAccessToken(credentialsPath, SCOPE);
   const spreadsheet = await sheetsFetch(
     `${SHEETS_API}/${config.spreadsheetId}?fields=sheets(properties(sheetId,title,gridProperties),conditionalFormats)`,
     accessToken,
@@ -76,62 +81,6 @@ function getArgValue(name) {
   const prefix = `${name}=`;
   const value = process.argv.slice(2).find((arg) => arg.startsWith(prefix));
   return value?.slice(prefix.length);
-}
-
-function validateConfig(config) {
-  if (!config.spreadsheetId) {
-    throw new Error('config.spreadsheetId is required.');
-  }
-  if (!Array.isArray(config.sheets) || config.sheets.length === 0) {
-    throw new Error('config.sheets must be a non-empty array.');
-  }
-
-  for (const sheet of config.sheets) {
-    if (!sheet.title) {
-      throw new Error('Every sheet must have a title.');
-    }
-    if (!Array.isArray(sheet.columns) || sheet.columns.length === 0) {
-      throw new Error(`Sheet ${sheet.title} must define columns.`);
-    }
-    const seenColumns = new Set();
-    for (const column of sheet.columns) {
-      const name = columnNameFromConfig(column);
-      if (!name) {
-        throw new Error(`Sheet ${sheet.title} has a column without a name.`);
-      }
-      if (seenColumns.has(name)) {
-        throw new Error(`Sheet ${sheet.title} has duplicate column ${name}.`);
-      }
-      seenColumns.add(name);
-    }
-    for (const validation of sheet.validations ?? []) {
-      if (!seenColumns.has(validation.column)) {
-        throw new Error(`Sheet ${sheet.title} validation references unknown column ${validation.column}.`);
-      }
-    }
-    for (const conditionalFormat of sheet.conditionalFormats ?? []) {
-      if (!seenColumns.has(conditionalFormat.column)) {
-        throw new Error(
-          `Sheet ${sheet.title} conditional format references unknown column ${conditionalFormat.column}.`,
-        );
-      }
-      if (!conditionalFormat.formula) {
-        throw new Error(`Sheet ${sheet.title} conditional format on ${conditionalFormat.column} needs a formula.`);
-      }
-      validateColor(conditionalFormat.backgroundColor, `Sheet ${sheet.title} conditional format backgroundColor`);
-    }
-  }
-}
-
-function validateColor(color, label) {
-  if (!color || typeof color !== 'object') {
-    throw new Error(`${label} is required.`);
-  }
-  for (const key of ['red', 'green', 'blue']) {
-    if (typeof color[key] !== 'number' || color[key] < 0 || color[key] > 1) {
-      throw new Error(`${label}.${key} must be a number between 0 and 1.`);
-    }
-  }
 }
 
 function printPlan(config) {
@@ -379,94 +328,4 @@ async function batchUpdate(spreadsheetId, requests, accessToken) {
     method: 'POST',
     body: JSON.stringify({ requests }),
   });
-}
-
-async function sheetsFetch(url, accessToken, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      ...(options.headers ?? {}),
-    },
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Sheets API request failed ${response.status}: ${body}`);
-  }
-
-  return response.json();
-}
-
-async function getAccessToken(credentialsPath) {
-  const credentials = JSON.parse(await readFile(credentialsPath, 'utf8'));
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const claim = {
-    iss: credentials.client_email,
-    scope: SCOPE,
-    aud: TOKEN_URL,
-    iat: now,
-    exp: now + 3600,
-  };
-
-  if (!credentials.client_email || !credentials.private_key) {
-    throw new Error('Service account credentials must include client_email and private_key.');
-  }
-
-  const unsigned = `${base64urlJson(header)}.${base64urlJson(claim)}`;
-  const signature = crypto
-    .createSign('RSA-SHA256')
-    .update(unsigned)
-    .sign(credentials.private_key)
-    .toString('base64url');
-
-  const response = await fetch(TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: `${unsigned}.${signature}`,
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`OAuth token request failed ${response.status}: ${body}`);
-  }
-
-  const token = await response.json();
-  return token.access_token;
-}
-
-function base64urlJson(value) {
-  return Buffer.from(JSON.stringify(value)).toString('base64url');
-}
-
-function quoteSheetName(name) {
-  return `'${name.replaceAll("'", "''")}'`;
-}
-
-function getColumnNames(sheet) {
-  return sheet.columns.map((column) => columnNameFromConfig(column));
-}
-
-function columnNameFromConfig(column) {
-  return typeof column === 'string' ? column : column.name;
-}
-
-function columnNoteFromConfig(column) {
-  return typeof column === 'string' ? '' : (column.note ?? '');
-}
-
-function spreadsheetColumnName(count) {
-  let n = count;
-  let name = '';
-  while (n > 0) {
-    n -= 1;
-    name = String.fromCharCode(65 + (n % 26)) + name;
-    n = Math.floor(n / 26);
-  }
-  return name;
 }
