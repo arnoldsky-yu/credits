@@ -92,6 +92,8 @@ Do not invent a policy that hides, deletes, or rewrites historical event records
 
 Future automation may allow a contributor to update a profile file that corresponds to their own GitHub username. This is only appropriate for low-risk, opt-in profile fields such as preferred display name, biography, avatar, and public links.
 
+Profile files live at `profiles/<github_username>.json`. The filename is the profile link key; do not add a separate identity identifier or historical appearance list inside the profile file. The current allowed profile fields are documented by `profiles/README.md`, `profiles/_template.json`, and `schemas/profile.schema.json`.
+
 Future automation may also create blank profile templates for GitHub usernames found in `appearances.github_username` when the corresponding profile file does not exist yet. The template should be empty or placeholder-only; it must not invent profile details, identity evidence, biographies, avatars, links, aliases, or historical appearance links.
 
 Existing contributors may open a GitHub PR to create or fill their own profile and state which historical appearances they believe are theirs. Treat that PR as a signal of intent and evidence for maintainer review, not as automatic approval to merge identities or rewrite historical records.
@@ -106,6 +108,8 @@ Before any self-service PR may be auto-accepted, the repository should have vali
 - the PR does not process profile removal, unlinking, or privacy policy changes
 
 Passing a filename or GitHub username check is not identity-merge approval. It must not be used to link appearances, consolidate profiles, or resolve source conflicts.
+
+Use `pnpm profiles:validate` for local profile-format validation. This validation is a field-scope and data-minimization check only; it does not approve an identity link, historical record correction, removal request, or profile unlinking request.
 
 ## Google Sheets Model
 

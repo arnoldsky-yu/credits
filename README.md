@@ -45,7 +45,7 @@ SITCON 現役工作人員可依照既有 Google Workspace 權限管理方式維�
 
 JSON 或 Git-tracked data 對 diff、review 與歷史追蹤有優勢，但如果把年度貢獻紀錄全部改成手寫 JSON，會提高非工程背景維護者的資料整理成本。因此現階段的取捨是：貢獻紀錄由 Google Sheets 承擔主要維護流程；本人 opt-in 的個人簡介與公開連結，則以 GitHub PR 流程作為主要維護方式。
 
-Google Sheets 預期只維護活動出現紀錄、活動清單，以及由 GitHub Actions 產生的 people 參照清單。profile 內容應以 GitHub repository 中的個人資料檔案為準；只要 GitHub 中已有對應檔案，就不需要在 Google Sheets 另外維護一份重複的個人簡介狀態。Google Sheets 中的 `github_username` 欄位用來把某筆活動出現紀錄連到 GitHub username；它也可以暫時指向尚未建立 profile 檔案的 username，讓工具建立空白 template。`people` 表是選取提示與既有 profile 參照，不是封閉的 username 允許清單。
+Google Sheets 預期只維護活動出現紀錄、活動清單，以及由 GitHub Actions 產生的 people 參照清單。profile 內容應以 GitHub repository 中 `profiles/<github_username>.json` 的個人資料檔案為準；只要 GitHub 中已有對應檔案，就不需要在 Google Sheets 另外維護一份重複的個人簡介狀態。Google Sheets 中的 `github_username` 欄位用來把某筆活動出現紀錄連到 GitHub username；它也可以暫時指向尚未建立 profile 檔案的 username，讓工具建立空白 template。`people` 表是選取提示與既有 profile 參照，不是封閉的 username 允許清單。
 
 repo 工具可透過維護者提供的 service account credentials 依照受控流程操作 Google Sheets，例如初始化表格、設定資料驗證規則、同步 `people` 參照清單、匯出 canonical data，或執行資料檢查。GitHub Actions 對應 workflow、secret 與權限設定尚未建立前，文件應將 CI 自動化描述為規劃中，而不是已啟用。
 
@@ -184,6 +184,16 @@ pnpm data:validate
 pnpm test
 ```
 
+### 驗證 profile 檔案
+
+`profiles:validate` 會檢查 `profiles/` 中由貢獻者自行編寫的公開 profile 檔案。這個指令只讀取 repo 內的 JSON 檔案，不會連線 Google Sheets，也不會讀取 service account credentials。
+
+```bash
+pnpm profiles:validate
+```
+
+profile 檔案格式請見 `profiles/README.md` 與 `profiles/_template.json`。目前允許的欄位只包含偏好的公開顯示名稱、簡介、頭像 URL 與公開連結；歷史活動紀錄、身份合併、來源 URL 修正或 profile 解除連結仍需由維護者審查，不能只靠 profile 檔案自行宣告。
+
 ## 資料最小化
 
 本專案只應公開完成貢獻紀錄索引所需的資料。歷史活動紀錄原則上只需要活動脈絡中的必要資訊，例如：
@@ -219,6 +229,8 @@ Google Workspace 中的內部文件可以作為維護線索，但不能因為維
 - GitHub、個人網站或社群連結
 
 個人簡介、頭像與連結採 opt-in，並以 GitHub repository 中的個人資料檔案為主要資料來源。本人可以透過 GitHub Pull Request 提出新增、修正或移除。
+
+目前 profile 檔案放在 `profiles/<github_username>.json`，可從 `profiles/_template.json` 複製空白範本開始填寫。profile schema 放在 `schemas/profile.schema.json`，本機可用 `pnpm profiles:validate` 檢查格式。
 
 未來可規劃 GitHub PR 自助更新流程，讓曾經貢獻者以自己的 GitHub 帳號提出 PR，更新與該 GitHub username 對應的個人公開簡介檔案。這個流程應只接受低風險的 profile 資料，例如偏好的顯示名稱、個人簡介、頭像與公開連結；不應用來修改歷史貢獻紀錄、活動角色或來源 URL。
 
@@ -266,7 +278,7 @@ Google Workspace 中的內部文件可以作為維護線索，但不能因為維
 - 協助確認資料來源 URL。
 - 協助整理 Google Sheets 欄位與維護流程。
 - 協助設計 GitHub Pages 前端查詢體驗。
-- 提出個人簡介、連結或顯示名稱更新。
+- 依照 `profiles/README.md` 提出自己的個人簡介、連結或顯示名稱更新。
 - 回報錯誤合併、錯字或資料來源問題。
 
 在資料政策與工具尚未完整建立前，請避免大量自動匯入或自動合併身份。這個專案的長期價值來自可信任、可維護的紀錄，而不是一次性塞滿資料。

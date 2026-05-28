@@ -9,6 +9,7 @@
     "sheets:export": "node scripts/ensure-pnpm.mjs && node scripts/sheets/export.mjs",
     "sheets:export:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/export.mjs --dry-run",
     "data:validate": "node scripts/ensure-pnpm.mjs && node scripts/data/validate.mjs",
+    "profiles:validate": "node scripts/ensure-pnpm.mjs && node scripts/profiles/validate.mjs",
     "sheets:init": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs",
     "sheets:init:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs --dry-run"
   },
