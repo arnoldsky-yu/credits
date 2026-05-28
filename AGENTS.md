@@ -147,7 +147,11 @@ Source URLs should usually live on `events`:
 - Use `speaker_source_url` for speaker records.
 - Use `appearances.source_url_override` only when a specific appearance has a different source from the event-level source.
 
-Repository tooling may manage Google Sheets structure, header notes, and validation rules from `config/sheets.json`. Use `pnpm` for all package-manager operations and package scripts. Do not use npm, yarn, or bun, and do not create or commit `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`, or `bun.lockb`. LLM agents may run dry-run or static validation commands that do not read credentials, such as `pnpm sheets:init:dry-run` or `node --check scripts/sheets/init.mjs`. Do not run credentialed Google Sheets commands locally, such as `pnpm sheets:init`, unless the user explicitly asks for that exact action and the command can run without exposing secret contents.
+Repository tooling may manage Google Sheets structure, header notes, validation rules, read-only exports, or local data checks from `config/sheets.json` and package scripts. Use `pnpm` for all package-manager operations and package scripts. Do not use npm, yarn, or bun, and do not create or commit `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`, or `bun.lockb`.
+
+LLM agents may run dry-run, local validation, or static syntax-check commands that do not read credentials and do not contact Google APIs, such as `pnpm sheets:init:dry-run`, `pnpm sheets:export:dry-run`, `pnpm data:validate`, `pnpm profiles:validate`, or `node --check ...`.
+
+Do not run commands that read `GOOGLE_APPLICATION_CREDENTIALS` or contact Google APIs unless the user explicitly asks for that exact operation and the command can run without exposing secret contents. This includes credentialed commands such as `pnpm sheets:init` and `pnpm sheets:export`, even when the operation is read-only.
 
 ## Data Minimization
 
@@ -194,5 +198,7 @@ If a source is outside this repository, do not claim that it has been corrected.
 
 - `README.md` is the friendly starting point for community members and maintainers.
 - `AGENTS.md` is the local instruction entrypoint for LLM agents.
+- Keep `AGENTS.md` focused on agent-facing policy, safety boundaries, and routing rules. Do not turn it into the complete command manual as repository tooling grows.
 - Future technical docs should distinguish planned behavior from implemented behavior.
+- If tool-specific operational detail grows beyond short guardrails, move it into dedicated maintainer documentation and link or summarize the boundary here.
 - When adding data model docs later, describe the minimum fields, source-of-truth rules, and maintenance flow before adding automation.
