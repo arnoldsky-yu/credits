@@ -1,22 +1,37 @@
 # SITCON Credits
 
-SITCON Credits（SITCON 貢獻紀錄）是一個整理 SITCON 歷年公開貢獻紀錄的專案。
+SITCON Credits（SITCON 貢獻紀錄）整理 SITCON 歷年公開的工作人員與講者貢獻紀錄，讓社群可以更容易回顧某場活動、某個角色或某位夥伴曾經參與的公開紀錄。
 
-多年來，SITCON 相關活動累積了許多工作人員與講者的投入。這些紀錄通常散落在歷屆官網、活動頁面、議程頁或工作文件中；當我們想回顧某個人曾經參與哪些活動、擔任哪些角色，或想向曾經貢獻的夥伴表達感謝時，往往需要重新翻找每一屆網站。
+多年來，SITCON 相關活動的工作人員與講者資訊分散在歷屆官網、活動頁、議程頁與其他公開頁面。這個專案希望把那些公開紀錄整理成可長期維護、可追溯來源、未來可部署到 GitHub Pages 的索引，同時讓曾經參與的夥伴可以 opt-in 補充自己的公開簡介、頭像與連結。
 
-這個專案希望把這些公開紀錄整理成可以長期維護、可以部署在 GitHub Pages 的索引，同時讓曾經參與的夥伴能選擇補充自己的公開簡介、頭像與連結。
+相關入口：
 
-## 專案目標
+- Google Sheet：https://docs.google.com/spreadsheets/d/1L2drpIE2ocZF3Stba9X0DnLGmYi_igeGWUhaQB_evsQ/edit?gid=0#gid=0
+- 個人資料 repo：https://github.com/sitcon-tw/credits-profiles
+- GitHub Pages：TBD
 
-- 彙整 SITCON 相關活動中工作人員與講者的公開貢獻紀錄。
-- 讓社群更容易查找某個人、某場活動、某個角色或某段時間的貢獻紀錄。
-- 讓貢獻者可以 opt-in 維護自己的公開簡介、頭像與連結。
-- 降低現役工作人員整理與維護資料的成本。
-- 讓資料來源、維護流程與隱私政策清楚可追溯，避免只靠口耳相傳。
+## 資料分層
+
+SITCON Credits 刻意把「歷史貢獻紀錄」和「個人公開簡介」分成不同層次。
+
+歷史貢獻紀錄記錄某個公開名稱在某場 SITCON 相關活動中擔任什麼角色，例如工作人員組別、講者身份、場次類型與來源 URL。這些紀錄來自歷屆活動官網等公開來源，經整理與審核後，以 canonical Google Sheet 作為主要發布資料源。
+
+個人公開簡介是本人 opt-in 提供的 profile 資料，例如偏好的顯示名稱、簡介、頭像與公開連結。這些資料由 `credits-profiles` 維護，適合透過 GitHub Pull Request 讓本人或維護者更新。
+
+這樣分層是為了讓不同維護流程符合不同資料的風險：
+
+- 活動紀錄由維護者在 Google Sheets 整理，方便不熟 GitHub 的工作人員維護當年度資料。
+- 個人 profile 由獨立 repo 接受 Pull Request，讓自助更新不干擾本 repo 的資料模型、工具與網站開發紀錄。
+- GitHub username 可以把歷史紀錄連到 profile，但這個連結仍是維護者審核後的資料判斷，不是 profile PR 自動完成的身份合併。
 
 ## 收錄範圍
 
-本專案預期收錄 SITCON 相關活動的公開貢獻紀錄，包含但不限於：
+第一階段預設收錄 SITCON 相關活動中的：
+
+- 工作人員
+- 講者
+
+活動範圍包含但不限於：
 
 - SITCON 年會
 - SITCON Camp
@@ -24,251 +39,122 @@ SITCON Credits（SITCON 貢獻紀錄）是一個整理 SITCON 歷年公開貢獻
 - Hackathon
 - 其他由 SITCON 主辦、共同主辦、以 SITCON 品牌正式舉辦或長期維護的社群活動
 
-協辦、合作或社群成員自行參與的活動不會自動納入。若某個活動是否屬於 SITCON Credits 的收錄範圍不明確，應先由維護者確認，再新增資料。
+協辦、合作或社群成員自行參與的活動不會自動納入。一般參與者、投稿未錄取者、贊助商窗口或其他非公開貢獻角色，也不是第一階段的預設收錄對象。若未來要擴充範圍，應先更新文件與資料政策。
 
-第一階段預設收錄對象為：
+## 資料來源與權威
 
-- 工作人員
-- 講者
+歷屆活動官網是歷史貢獻紀錄的原始依據。每場活動都應盡可能保留對應來源 URL，讓後續維護者可以查核資料從哪裡來。
 
-一般參與者、投稿未錄取者、贊助商窗口或其他非公開貢獻角色，不是第一階段的預設收錄對象。若未來需要擴充，應先更新本文件與資料政策。
+Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官網與 canonical Sheet 中的審核資料不同，公開輸出以維護者在 canonical Sheet 中確認後的資料為準。這讓維護者可以修正錯字、補上已確認資訊，或保留來源差異的處理結果。
 
-## 資料來源與維護方式
+`credits-profiles` 是個人公開簡介的來源，不是歷史紀錄或身份合併的權威。某個 GitHub username 有 profile 檔案，只代表該 username 有一份 opt-in profile；某筆歷史 appearance 是否連到該 username，仍以 canonical Sheet 中經維護者審核的 `github_username` 為準。
 
-歷屆活動官網是歷史貢獻紀錄的原始依據。每場活動都應盡可能保留對應的來源 URL，讓後續維護者可以確認資料從哪裡來。若同一場活動中只有少數紀錄來自不同來源，再於該筆紀錄另外標示例外來源。
+## 預期資料流程
 
-Google Sheets 是經整理與審核後的主要發布資料源。若歷屆官網資料與 Google Sheets 中的審核資料不同，公開頁面以維護者在 canonical Sheet 中確認後的資料為準。這讓維護者可以修正錯字、補上已確認資訊，或整理不同來源之間的差異。
-
-SITCON 現役工作人員可依照既有 Google Workspace 權限管理方式維護工作表。未來若在工作人員登錄流程中蒐集 GitHub username，行政組長可以把已蒐集到的 username 放入 Google Sheets；即使該 username 還沒有對應的 repo profile 檔案，也可以先填入 `appearances.github_username`，作為後續建立 profile template 的線索。規劃中的 GitHub Actions 應在發現 Sheet 中出現尚未存在的 username 時，建立對應的空白個人資料 template，讓該夥伴可以透過 GitHub Pull Request 自行補充公開簡介、頭像與連結。
-
-本專案不把所有資料都放在同一種維護介面中，而是依資料類型分工。年度活動的工作人員與講者紀錄通常由行政或活動工作人員整理，Google Sheets 較符合 SITCON 既有 Google Workspace 工作流程，也能讓不熟 GitHub 的未來行政組長直接整理當年度資料。個人公開簡介則較適合放在 GitHub repo 中，讓本人或維護者透過 Pull Request 更新，保留較清楚的 review 與變更歷史。
-
-JSON 或 Git-tracked data 對 diff、review 與歷史追蹤有優勢，但如果把年度貢獻紀錄全部改成手寫 JSON，會提高非工程背景維護者的資料整理成本。因此現階段的取捨是：貢獻紀錄由 Google Sheets 承擔主要維護流程；本人 opt-in 的個人簡介與公開連結，則以 GitHub PR 流程作為主要維護方式。
-
-Google Sheets 預期只維護活動出現紀錄、活動清單，以及由 GitHub Actions 產生的 people 參照清單。profile 內容應以 GitHub repository 中 `profiles/<github_username>.json` 的個人資料檔案為準；只要 GitHub 中已有對應檔案，就不需要在 Google Sheets 另外維護一份重複的個人簡介狀態。Google Sheets 中的 `github_username` 欄位用來把某筆活動出現紀錄連到 GitHub username；它也可以暫時指向尚未建立 profile 檔案的 username，讓工具建立空白 template。`people` 表是選取提示與既有 profile 參照，不是封閉的 username 允許清單。
-
-repo 工具可透過維護者提供的 service account credentials 依照受控流程操作 Google Sheets，例如初始化表格、設定資料驗證規則、同步 `people` 參照清單、匯出 canonical data，或執行資料檢查。GitHub Actions 對應 workflow、secret 與權限設定尚未建立前，文件應將 CI 自動化描述為規劃中，而不是已啟用。
-
-目前預期的資料流程：
+目前預期流程如下；GitHub Actions、Pages 部署與跨 repo 整合尚未啟用前，文件與工具都應把它們描述為規劃中。
 
 1. 從歷屆官網或其他公開活動頁面整理工作人員與講者紀錄。
 2. 將人工整理或匯入的活動出現紀錄維護在 canonical Google Sheet。
-3. 若工作人員登錄資料包含 GitHub username，可先填入 `appearances.github_username`；若 repo 中尚無對應 profile，規劃中的 GitHub Actions 應建立空白 profile template。
-4. 曾經貢獻的夥伴可透過 GitHub Pull Request 新增或補充自己的個人資料，並指出自己對應到歷史紀錄中的哪一筆貢獻，作為建立關聯意願與維護者審核的依據。
-5. 經維護者確認後，在 Google Sheets 的活動出現紀錄中保留或填入對應的 `github_username`，建立歷史紀錄與個人資料檔案之間的關聯。
-6. 透過 GitHub Actions 匯出資料並產生 GitHub Pages 靜態網站。
+3. 若工作人員登錄資料包含 GitHub username，可先填入 `appearances.github_username`，作為後續建立 profile template 或審核身份連結的線索。
+4. 曾經貢獻的夥伴可在 `credits-profiles` 透過 Pull Request 新增或補充自己的 profile，並在 PR 說明中指出自己認為對應的歷史紀錄。
+5. 維護者審核身份連結後，在 canonical Sheet 的 `appearances.github_username` 保留或填入對應 username。
+6. 規劃中的建置流程可結合 canonical Sheet 匯出資料與 `credits-profiles` profile 資料，產生 GitHub Pages 靜態網站。
 
-預期 Google Sheets 結構：
+## Google Sheets 模型
 
-`appearances` 是活動出現紀錄主表，也是資料維護者最常編輯的工作表。每一列代表一個人在一場活動中出現的一筆公開貢獻紀錄。預期欄位包含：
+目前預期維護三張工作表：
 
-- `event_id`：對應到 `events` 表中的活動。
-- `role_group_zh`：中文分組或場次類型。工作人員填組別，例如「行政組」或「議程組」；講者填演講或場次類型，例如「Keynote」、「Panel」或「議程」。
-- `role_group_en`：英文分組或場次類型。工作人員填組別英文；講者填演講或場次類型英文。若留空，英文頁面直接沿用 `role_group_zh`。
-- `role_title_zh`：中文身份。工作人員填該組內身份，例如「組長」或「組員」；講者填該場次中的身份，例如「講者」、「主持人」或「與談人」。
-- `role_title_en`：英文身份。工作人員填該組內身份英文；講者填該場次中的身份英文。若留空，英文頁面直接沿用 `role_title_zh`。
+- `appearances`：每列代表一個人在一場活動中的一筆公開貢獻紀錄。
+- `events`：活動清單與活動層級來源 URL。
+- `people`：規劃中由工具產生的 profile 參照清單，協助 Sheets 操作者選擇或檢查 GitHub username。
+
+`appearances` 的重點欄位：
+
+- `event_id`：對應 `events.event_id`。
+- `role_group_zh` / `role_group_en`：公開顯示的組別或場次類型。工作人員填組別，講者填演講或場次類型。
+- `role_title_zh` / `role_title_en`：公開顯示的身份。工作人員填組長、組員等；講者填講者、主持人、與談人等。
 - `display_name_at_event`：該活動當時公開顯示的名稱。
-- `github_username`：連到 GitHub username 的欄位。若 repo 中已有對應 profile，代表這筆紀錄可連到該個人資料檔案；若尚未建立 profile，仍可填入作為建立空白 profile template 的線索。本人透過 PR 要求建立關聯時，仍需由維護者確認後才視為已接受的身份連結。
+- `github_username`：連到 profile 的 GitHub username。可以暫時填入尚未有 profile 檔案的 username，作為後續維護線索。
 - `source_url_override`：只有這筆紀錄的來源不同於活動層級來源時才填寫。
-- `notes`：只放維護所需的補充說明，不放私人聯絡資訊。
+- `notes`：維護備註，不放私人聯絡資訊。
 
-`role_group_*` 與 `role_title_*` 都是對外呈現的人類可讀文字，不是隱藏代碼。`role_group_*` 不應填成 `staff` 或 `speaker` 這類資料分類。英文欄位若留空，網站或匯出流程應直接沿用對應中文欄位；不應自動翻譯，也不需要因英文欄位留空產生資料品質報告。
+`events` 的重點欄位：
 
-`events` 是活動清單表，用來讓活動名稱、年份與來源維持一致。預期欄位包含：
+- `event_id`：穩定、可讀的活動 ID，例如 `SITCON-2026` 或 `SITCON-Camp-2026`。
+- `event_series`、`event_name_zh`、`event_name_en`、`event_year`：活動顯示與分類資訊。
+- `official_site_url`、`staff_source_url`、`speaker_source_url`：活動與貢獻紀錄來源。
+- `notes`：活動層級維護備註。
 
-- `event_id`：活動識別值，供 `appearances` 參照。建議使用穩定、可讀的 ASCII ID，品牌縮寫保留慣用大小寫，例如 `SITCON-2026` 或 `SITCON-Camp-2026`。
-- `event_series`：活動系列，例如 SITCON 年會、SITCON Camp 或 Hour of Code。
-- `event_name_zh`：中文公開顯示的活動名稱。
-- `event_name_en`：英文公開顯示的活動名稱；若留空，英文頁面直接沿用 `event_name_zh`。
-- `event_year`：活動年份。
-- `official_site_url`：活動官網或主要公開來源。
-- `staff_source_url`：該活動工作人員紀錄的主要公開來源 URL；若與 `speaker_source_url` 相同，可以填相同網址。
-- `speaker_source_url`：該活動講者紀錄的主要公開來源 URL；若與 `staff_source_url` 相同，可以填相同網址。
-- `notes`：活動層級的維護備註。
+`people` 預期只包含：
 
-`people` 是由 GitHub Actions 產生的參照清單，提供 Google Sheets 操作者在填寫 `appearances.github_username` 時進行檢查與選取。這張表不應由 Sheets 操作者手動維護，也不應放入 GitHub profile 檔案中已經存在的個人簡介、頭像或連結。`appearances.github_username` 可以填入不在 `people` 表中的 username；這代表該 username 可能需要由後續自動化建立空白 profile template，或等待本人透過 PR 建立 profile。`people.github_username` 若已有 profile 但沒有被任何 appearance 使用，也應以底色提醒維護者檢查是否還缺少已確認的連結、或只是尚未有人使用該 profile。預期欄位只有：
+- `github_username`
+- `display_name`
 
-- `github_username`：對應 GitHub repository 中的個人資料檔案。
-- `display_name`：供 Sheets 操作者辨識用的顯示名稱。
+`people` 是選取提示與維護提醒，不是封閉允許清單。`appearances.github_username` 不在 `people` 中可能代表 profile template 尚未建立，或身份連結仍待維護者審查；這是 maintenance prompt，不是自動錯誤。
 
-若網站輸出需要完整 `people` 索引，應由 GitHub repository 中的個人資料檔案產生。Google Sheets 只保留將 appearance 連到 GitHub username 所需的 `github_username` 關聯，以及觸發建立 profile template 的線索。這可以避免個人簡介、頭像、連結或公開顯示名稱同時出現在 Sheet 與 GitHub 檔案中，造成兩邊資料不一致。
+英文欄位可以留空。英文輸出應 fallback 到對應繁體中文欄位，不應自動翻譯，也不需要因英文欄位留空產生資料品質報告。
 
-相關入口：
+## 身份與 profile 原則
 
-- Google Sheet：https://docs.google.com/spreadsheets/d/1L2drpIE2ocZF3Stba9X0DnLGmYi_igeGWUhaQB_evsQ/edit?gid=0#gid=0
-- GitHub Pages：TBD
+同一個人可能在不同年份或活動中使用不同名稱、暱稱、英文名或 GitHub 帳號。本專案採取 appearance-first model：先保留每筆公開活動出現紀錄，再由維護者審核是否連到某個 GitHub username profile。
 
-## Google Sheets 工具
+請不要只因以下線索就自動合併身份：
 
-本 repo 提供 Google Sheets 初始化、匯出與本地驗證工具，讓表格結構、欄位標題、欄位說明、基本資料驗證與後續資料品質檢查可以由 repo 管理，減少手動設定。
+- 顯示名稱相同或相似
+- 暱稱相似
+- romanization 相似
+- GitHub 帳號名稱相似
+- 本人或他人在未審核 PR 中的敘述
+- LLM 推論或過往記憶
+
+本人提出 profile PR 並指出自己對應到哪些歷史 appearance，是建立關聯意願與審核線索，不是自動身份合併。若不確定是否為同一人，應先保持紀錄分開。
+
+## 隱私與更正
+
+本專案只公開完成貢獻紀錄索引所需的資料，例如活動名稱、年份、角色、當時公開顯示名稱、來源 URL 與 profile 連結狀態。
+
+不應公開或提交：
+
+- 私人 email、電話、地址或證件資料
+- 內部工作文件中的聯絡資訊
+- 未經本人同意公開的社群帳號
+- 與公開貢獻紀錄無關的私人資訊
+
+本人可以要求移除或修改 profile 層資料，例如簡介、頭像、連結與偏好顯示名稱。若本人不希望被集中呈現在個人頁中，維護者可以解除歷史 appearance 與 profile 的連結；但已在歷屆官網公開的歷史貢獻紀錄，預設仍保留在活動脈絡中。
+
+若原始官網資料本身有誤，維護者可以在 canonical Sheet 中記錄審核後的修正資料，並保留可追溯的來源 URL。
+
+## 本地工具
 
 本 repo 的 Node.js 工具統一使用 pnpm。請不要使用 npm、yarn 或 bun 執行安裝或產生 lockfile。
 
-工具設定放在 `config/sheets.json`，目前會管理：
-
-- `appearances`
-- `events`
-- `people`
-
-本機執行前，維護者需要先將 service account JSON 放在不會被 commit 的本機路徑，例如 repo 根目錄的 `credentials.json`，並確認 Google Sheet 已分享給該 service account 的 email。
-
-可先檢查工具將套用的設定：
+不讀取憑證、不連線 Google Sheets 的檢查：
 
 ```bash
+pnpm test
 pnpm sheets:init:dry-run
-```
-
-確認後再執行初始化：
-
-```bash
-export GOOGLE_APPLICATION_CREDENTIALS="$PWD/credentials.json"
-pnpm sheets:init
-```
-
-`sheets:init` 會建立缺少的工作表、更新第一列欄位名稱、在欄位標題留下說明 note、凍結標題列、設定欄寬，並設定 `appearances.event_id` 與 `appearances.github_username` 的基本資料驗證。`event_id` 驗證會要求選擇既有活動；`github_username` 驗證會顯示 `people` 表中的既有 profile 作為選取提示，但允許填入尚未建立 profile 的 username。工具也會設定條件格式：`appearances.github_username` 若不在 `people` 中，會用底色提醒需要建立 profile template；`people.github_username` 若沒有被任何 appearance 使用，會用另一種底色提醒維護者檢查。這個工具不會清空既有資料列。
-
-### 匯出 Google Sheets 資料
-
-`sheets:export` 會從 canonical Google Sheet 讀取 `appearances`、`events` 與 `people`，並輸出到本機 `tmp/sheets-export/`。這個指令只讀取 Google Sheets，不會修改工作表內容。
-
-```bash
-export GOOGLE_APPLICATION_CREDENTIALS="$PWD/credentials.json"
-pnpm sheets:export
-```
-
-匯出結果包含：
-
-- `tmp/sheets-export/export.json`：後續驗證與建置使用的完整資料。
-- `tmp/sheets-export/appearances.json` 與 `appearances.csv`
-- `tmp/sheets-export/events.json` 與 `events.csv`
-- `tmp/sheets-export/people.json` 與 `people.csv`
-- `tmp/sheets-export/summary.json`
-
-若只想確認匯出設定，不讀取憑證也不連線 Google Sheets，可以執行：
-
-```bash
 pnpm sheets:export:dry-run
 ```
 
-`tmp/` 是本機產物，不應提交到 Git。
-
-### 驗證匯出資料
-
-匯出後可執行：
+匯出後可驗證本機資料：
 
 ```bash
 pnpm data:validate
 ```
 
-`data:validate` 只讀取本機 `tmp/sheets-export/export.json` 與 repo 內的 `config/sheets.json`，不會連線 Google Sheets，也不會讀取 service account credentials。它目前會檢查：
+`data:validate` 只讀取本機 `tmp/sheets-export/export.json` 與 `config/sheets.json`，不會連線 Google Sheets，也不會讀取 service account credentials。
 
-- 匯出內容是否包含 `appearances`、`events` 與 `people`，且欄位順序與 `config/sheets.json` 一致。
-- `appearances.event_id` 是否存在於 `events.event_id`。
-- `events.event_id` 與 `people.github_username` 是否重複。
-- 重要欄位是否空白，例如活動 ID、活動名稱、活動年份、中文角色欄位與活動當時公開顯示名稱。
-- URL 欄位是否為有效的 `http` 或 `https` URL。
-- `github_username` 是否符合 GitHub username 的基本格式。
-- `appearances.github_username` 是否尚未出現在 `people`，以及 `people.github_username` 是否沒有被任何 appearance 使用。
-- `notes`、顯示名稱等欄位是否疑似含有 email 或電話等不應公開的聯絡資訊。
-- `role_group_zh` 或 `role_group_en` 是否疑似被填成 staff/speaker 分類，而不是公開組別或場次類型。
-
-英文欄位空白不是錯誤。英文輸出應在後續建置階段 fallback 到對應的繁體中文欄位，不應自動翻譯。
-
-驗證結果分成 error 與 warning。error 代表資料目前不適合進入公開輸出；warning 是維護提示，不代表工具已做出身份合併、profile 連結或資料政策判斷。`appearances.github_username` 尚未出現在 `people` 是 warning，不是錯誤，因為它可能只是等待建立空白 profile template 或等待維護者後續審查。
-
-### 本地工具測試
-
-不讀取憑證也不連線 Google Sheets 的工具邏輯，可以用 Node.js 內建測試執行：
+需要操作 Google Sheets 時，維護者需先將 service account JSON 放在不會被 commit 的本機路徑，並設定：
 
 ```bash
-pnpm test
+export GOOGLE_APPLICATION_CREDENTIALS="$PWD/credentials.json"
+pnpm sheets:init
+pnpm sheets:export
 ```
 
-### 驗證 profile 檔案
+`sheets:init` 會建立或更新工作表結構、欄位 note、基本資料驗證與條件格式，不會清空既有資料列。`sheets:export` 會讀取 canonical Google Sheet 並輸出到 `tmp/sheets-export/`；`tmp/` 是本機產物，不應提交。
 
-`profiles:validate` 會檢查 `profiles/` 中由貢獻者自行編寫的公開 profile 檔案。這個指令只讀取 repo 內的 JSON 檔案，不會連線 Google Sheets，也不會讀取 service account credentials。
-
-```bash
-pnpm profiles:validate
-```
-
-profile 檔案格式請見 `profiles/README.md` 與 `profiles/_template.json`。目前允許的欄位只包含偏好的公開顯示名稱、簡介、頭像 URL 與公開連結；歷史活動紀錄、身份合併、來源 URL 修正或 profile 解除連結仍需由維護者審查，不能只靠 profile 檔案自行宣告。
-
-## 資料最小化
-
-本專案只應公開完成貢獻紀錄索引所需的資料。歷史活動紀錄原則上只需要活動脈絡中的必要資訊，例如：
-
-- 活動名稱
-- 年份
-- 角色
-- 當時公開顯示名稱
-- 來源 URL
-- 是否連到個人頁
-
-不應公開收集或發布下列資料：
-
-- 私人 email
-- 電話
-- 地址
-- 身份證明資料
-- 內部工作文件中的聯絡資訊
-- 未經本人同意公開的社群帳號
-- 其他與公開貢獻紀錄無關的私人資訊
-
-Google Workspace 中的內部文件可以作為維護線索，但不能因為維護者看得到，就直接輸出到公開網站。若資料沒有出現在公開活動來源中，也不是本人 opt-in 提供，就不應公開。
-
-## 個人資料與更新
-
-歷史貢獻紀錄與個人公開簡介是不同層次的資料。
-
-歷史貢獻紀錄是根據歷屆官網等公開來源整理而來，例如某人在某場活動擔任工作人員或講者。個人公開簡介則是本人可以選擇補充的資料，例如：
-
-- 偏好的顯示名稱
-- 個人簡介
-- 頭像
-- GitHub、個人網站或社群連結
-
-個人簡介、頭像與連結採 opt-in，並以 GitHub repository 中的個人資料檔案為主要資料來源。本人可以透過 GitHub Pull Request 提出新增、修正或移除。
-
-目前 profile 檔案放在 `profiles/<github_username>.json`，可從 `profiles/_template.json` 複製空白範本開始填寫。profile schema 放在 `schemas/profile.schema.json`，本機可用 `pnpm profiles:validate` 檢查格式。
-
-未來可規劃 GitHub PR 自助更新流程，讓曾經貢獻者以自己的 GitHub 帳號提出 PR，更新與該 GitHub username 對應的個人公開簡介檔案。這個流程應只接受低風險的 profile 資料，例如偏好的顯示名稱、個人簡介、頭像與公開連結；不應用來修改歷史貢獻紀錄、活動角色或來源 URL。
-
-若工作人員登錄流程蒐集 GitHub username，應在蒐集時清楚說明用途：該 username 可能先被填入 Google Sheets，用來建立公開個人資料 template、讓本人後續以 GitHub PR 維護自己的 profile，並在維護者確認後連結到歷史貢獻紀錄。未經本人同意公開的其他社群帳號或私人聯絡資訊不應放入公開資料。
-
-若 repo 中尚未有某個 GitHub username 的 profile，規劃中的 GitHub Actions 應建立空白 template，而不是自動替本人填入簡介、頭像或連結。舊的夥伴也可以主動透過 GitHub Pull Request 建立自己的 profile，並在 PR 中說明希望連結到哪些歷史 appearance；這會表達建立關聯的意願，但仍不是自動身份合併。
-
-自助 PR 自動接受機制尚未實作。啟用前需要先建立 profile 資料格式、驗證規則與 GitHub Actions 檢查，確認 PR 作者只修改自己的 profile 檔案，且變更內容符合允許欄位。這些檢查完成前，GitHub PR 仍需由維護者確認。
-
-## 身份合併原則
-
-同一個人可能在不同年份或不同活動中使用不同名稱、暱稱、英文名或 GitHub 帳號。這是本專案最需要謹慎處理的問題之一。
-
-本專案採取「先保留出現紀錄，再建立個人頁」的原則：
-
-- 每筆活動上的公開出現紀錄都可以先獨立保存。
-- GitHub username 對應 repo 中的個人資料檔案，也是歷史出現紀錄連到 profile 的關聯欄位；若 profile 檔案尚未存在，`appearances.github_username` 可先保留該 username 作為建立 template 的線索。
-- 跨活動的個人頁關聯可由維護者依據社群脈絡判斷建立。
-- 不應只因同名、相似暱稱、相似英文拼法或相似 GitHub 帳號，就自動判定為同一人。
-- 本人提出個人資料 PR 並指出自己對應到哪一筆歷史貢獻時，仍需經維護者確認後，才新增、保留或調整 Google Sheets 中該筆 appearance 的 `github_username` 作為已接受的身份連結。
-- 若不確定是否為同一人，應先保持分開，等未來有更明確資訊再合併。
-
-這個設計的目標是在「讓歷年貢獻可以被看見」與「避免錯誤合併他人身份」之間取得平衡。
-
-## 更正與移除政策
-
-本人可以要求：
-
-- 移除個人簡介、頭像與連結。
-- 移除跨活動個人頁的連結。
-- 修正偏好的顯示名稱。
-- 修正錯誤的角色、活動或來源資訊。
-
-已在歷屆官網公開的歷史貢獻紀錄，本站預設不隱藏，也不假設過去的活動紀錄會被改動或刪除。若本人不希望被集中呈現在個人頁中，維護者可以解除該筆紀錄與個人頁的連結；但原本基於公開來源整理的活動紀錄仍會保留在活動脈絡中。
-
-如果原始官網資料本身有誤，維護者可以在 canonical Sheet 中記錄審核後的修正資料，並保留可追溯的來源 URL。
-
-未來若建立自助 PR 流程，仍只應涵蓋本人 opt-in profile 欄位更新。移除個人資料、解除跨活動個人頁連結、修正歷史角色或來源資訊，仍需要維護者審核，避免把身份判斷、來源衝突或政策問題交給自動化處理。
+Profile 檔案格式與 `pnpm profiles:validate` 由 `credits-profiles` 維護。
 
 ## 如何參與
 
@@ -278,7 +164,7 @@ Google Workspace 中的內部文件可以作為維護線索，但不能因為維
 - 協助確認資料來源 URL。
 - 協助整理 Google Sheets 欄位與維護流程。
 - 協助設計 GitHub Pages 前端查詢體驗。
-- 依照 `profiles/README.md` 提出自己的個人簡介、連結或顯示名稱更新。
+- 到 `credits-profiles` 提出自己的個人簡介、連結或顯示名稱更新。
 - 回報錯誤合併、錯字或資料來源問題。
 
 在資料政策與工具尚未完整建立前，請避免大量自動匯入或自動合併身份。這個專案的長期價值來自可信任、可維護的紀錄，而不是一次性塞滿資料。
