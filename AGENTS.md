@@ -26,7 +26,7 @@ Service account credentials and other secrets may exist locally for maintainers,
 
 If official event websites and the reviewed canonical Sheet disagree, public output should follow the maintainer-reviewed canonical Sheet. Do not resolve conflicts yourself unless the repository documentation or a maintainer explicitly gives the rule for that case.
 
-Low-risk self-service profile updates may be planned as a GitHub PR workflow, but do not describe that automation as active until the repository has the corresponding schema, validation workflow, branch protection or ruleset, and merge permissions configured.
+Low-risk self-service profile updates are expected to happen in the separate `sitcon-tw/credits-profiles` repository. Do not describe cross-repository automation, validation workflow, branch protection or ruleset, merge permissions, or generated profile templates as active until they exist in the relevant repository configuration.
 
 ## Scope
 
@@ -88,13 +88,15 @@ If a person does not want a consolidated profile, unlink the profile from the hi
 
 Do not invent a policy that hides, deletes, or rewrites historical event records. If the user asks for a policy change, treat it as a documentation/policy change request and keep the distinction between event records and profile data explicit.
 
-## Self-Service Profile PRs
+## External Profile Repository
 
-Future automation may allow a contributor to update a profile file that corresponds to their own GitHub username. This is only appropriate for low-risk, opt-in profile fields such as preferred display name, biography, avatar, and public links.
+Profile files are maintained in the separate `sitcon-tw/credits-profiles` repository so self-service profile PRs do not mix with this repository's data model, Google Sheets tooling, and site development history.
 
-Profile files live at `profiles/<github_username>.json`. The filename is the profile link key; do not add a separate identity identifier or historical appearance list inside the profile file. The current allowed profile fields are documented by `profiles/README.md`, `profiles/_template.json`, and `schemas/profile.schema.json`.
+Future automation may allow a contributor to update a profile file in that repository when it corresponds to their own GitHub username. This is only appropriate for low-risk, opt-in profile fields such as preferred display name, biography, avatar, and public links.
 
-Future automation may also create blank profile templates for GitHub usernames found in `appearances.github_username` when the corresponding profile file does not exist yet. The template should be empty or placeholder-only; it must not invent profile details, identity evidence, biographies, avatars, links, aliases, or historical appearance links.
+Profile files live at `profiles/<github_username>.json` in `credits-profiles`. The filename is the profile link key; do not add a separate identity identifier or historical appearance list inside the profile file.
+
+Future automation may also create blank profile templates in `credits-profiles` for GitHub usernames found in `appearances.github_username` when the corresponding profile file does not exist yet. The template should be empty or placeholder-only; it must not invent profile details, identity evidence, biographies, avatars, links, aliases, or historical appearance links.
 
 Existing contributors may open a GitHub PR to create or fill their own profile and state which historical appearances they believe are theirs. Treat that PR as a signal of intent and evidence for maintainer review, not as automatic approval to merge identities or rewrite historical records.
 
@@ -107,9 +109,9 @@ Before any self-service PR may be auto-accepted, the repository should have vali
 - the PR does not change historical event records, roles, source URLs, or event scope
 - the PR does not process profile removal, unlinking, or privacy policy changes
 
-Passing a filename or GitHub username check is not identity-merge approval. It must not be used to link appearances, consolidate profiles, or resolve source conflicts.
+Passing a filename or GitHub username check in `credits-profiles` is not identity-merge approval. It must not be used to link appearances, consolidate profiles, or resolve source conflicts.
 
-Use `pnpm profiles:validate` for local profile-format validation. This validation is a field-scope and data-minimization check only; it does not approve an identity link, historical record correction, removal request, or profile unlinking request.
+Use `pnpm profiles:validate` in `credits-profiles` for local profile-format validation. This validation is a field-scope and data-minimization check only; it does not approve an identity link, historical record correction, removal request, or profile unlinking request.
 
 ## Google Sheets Model
 
@@ -117,11 +119,11 @@ The expected operational sheets are:
 
 - `appearances`: maintainer-edited public contribution appearances.
 - `events`: maintainer-edited event metadata and event-level source URLs.
-- `people`: a GitHub Actions-generated selection helper with only `github_username` and `display_name`.
+- `people`: a planned generated selection helper with only `github_username` and `display_name`.
 
 Do not add a separate identity identifier for profile links. Historical appearances link to profile files through `github_username`.
 
-Do not treat the `people` sheet as the canonical profile source or a closed allowlist. It is derived from GitHub repository profile files and exists to help Google Sheets operators choose known usernames while still allowing `appearances.github_username` to contain not-yet-created profile usernames.
+Do not treat the `people` sheet as the canonical profile source or a closed allowlist. It is expected to be derived from `credits-profiles` profile files and exists to help Google Sheets operators choose known usernames while still allowing `appearances.github_username` to contain not-yet-created profile usernames.
 
 `appearances.github_username` validation should not be strict against `people`. A username outside `people` means either a blank profile template still needs to be created, or a maintainer still needs to review a contributor's requested link. It is not by itself proof that the profile exists or that an identity link has been accepted.
 
@@ -149,7 +151,7 @@ Source URLs should usually live on `events`:
 
 Repository tooling may manage Google Sheets structure, header notes, validation rules, read-only exports, or local data checks from `config/sheets.json` and package scripts. Use `pnpm` for all package-manager operations and package scripts. Do not use npm, yarn, or bun, and do not create or commit `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`, or `bun.lockb`.
 
-LLM agents may run dry-run, local validation, or static syntax-check commands that do not read credentials and do not contact Google APIs, such as `pnpm sheets:init:dry-run`, `pnpm sheets:export:dry-run`, `pnpm data:validate`, `pnpm profiles:validate`, or `node --check ...`.
+LLM agents may run dry-run, local validation, or static syntax-check commands that do not read credentials and do not contact Google APIs, such as `pnpm sheets:init:dry-run`, `pnpm sheets:export:dry-run`, `pnpm data:validate`, or `node --check ...`.
 
 Do not run commands that read `GOOGLE_APPLICATION_CREDENTIALS` or contact Google APIs unless the user explicitly asks for that exact operation and the command can run without exposing secret contents. This includes credentialed commands such as `pnpm sheets:init` and `pnpm sheets:export`, even when the operation is read-only.
 

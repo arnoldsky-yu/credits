@@ -118,11 +118,11 @@
       "columns": [
         {
           "name": "github_username",
-          "note": "對應 GitHub repository 中的個人資料檔案，也是 appearances.github_username 的選取提示來源。這張表由工具產生，不手動維護 profile 內容。"
+          "note": "對應 SITCON Credits Profiles repo 中的個人資料檔案，也是 appearances.github_username 的選取提示來源。這張表由工具產生，不手動維護 profile 內容。"
         },
         {
           "name": "display_name",
-          "note": "供 Google Sheets 操作者辨識用的顯示名稱。profile 正式內容仍以 GitHub repository 中的個人資料檔案為準。"
+          "note": "供 Google Sheets 操作者辨識用的顯示名稱。profile 正式內容仍以 SITCON Credits Profiles repo 中的個人資料檔案為準。"
         }
       ],
       "validations": [],
