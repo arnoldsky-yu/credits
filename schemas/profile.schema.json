@@ -34,20 +34,74 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["label", "url"],
+        "required": ["type", "url"],
         "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "github",
+              "gitlab",
+              "website",
+              "blog",
+              "linkedin",
+              "facebook",
+              "instagram",
+              "threads",
+              "x",
+              "discord",
+              "telegram",
+              "mastodon",
+              "youtube",
+              "slides",
+              "custom"
+            ],
+            "description": "Standard link type. Use custom only when no standard type fits."
+          },
           "label": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 40
+            "maxLength": 40,
+            "description": "Required only for custom links."
           },
           "url": {
             "type": "string",
             "minLength": 1,
             "maxLength": 2048,
-            "pattern": "^https?://"
+            "pattern": "^https://"
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "const": "custom"
+                }
+              }
+            },
+            "then": {
+              "required": ["label"]
+            }
+          },
+          {
+            "if": {
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "not": {
+                    "const": "custom"
+                  }
+                }
+              }
+            },
+            "then": {
+              "not": {
+                "required": ["label"]
+              }
+            }
+          }
+        ]
       }
     }
   }

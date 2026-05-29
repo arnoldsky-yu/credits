@@ -3,10 +3,29 @@ import path from 'node:path';
 
 const DEFAULT_PROFILES_DIR = 'profiles';
 const TEMPLATE_FILE = '_template.json';
-const SUPPORT_FILES = new Set(['README.md', TEMPLATE_FILE]);
+const EXAMPLE_FILE = '_example.json';
+const SUPPORT_FILES = new Set(['README.md', TEMPLATE_FILE, EXAMPLE_FILE]);
 const ALLOWED_KEYS = new Set(['$schema', 'display_name', 'bio', 'avatar_url', 'links']);
 const REQUIRED_KEYS = ['display_name', 'bio', 'avatar_url', 'links'];
 const GITHUB_USERNAME_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
+const STANDARD_LINK_TYPES = new Set([
+  'github',
+  'gitlab',
+  'website',
+  'blog',
+  'linkedin',
+  'facebook',
+  'instagram',
+  'threads',
+  'x',
+  'discord',
+  'telegram',
+  'mastodon',
+  'youtube',
+  'slides',
+]);
+const CUSTOM_LINK_TYPE = 'custom';
+const ALLOWED_LINK_TYPES = new Set([...STANDARD_LINK_TYPES, CUSTOM_LINK_TYPE]);
 
 const args = process.argv.slice(2);
 const profilesDir = getArgValue('--dir') ?? DEFAULT_PROFILES_DIR;
@@ -19,6 +38,7 @@ main().catch((error) => {
 async function main() {
   const issues = [];
   const entries = await readdir(profilesDir, { withFileTypes: true });
+  const entryNames = new Set(entries.map((entry) => entry.name));
   const profileFiles = [];
   const usernamesByLowercase = new Map();
 
@@ -56,6 +76,9 @@ async function main() {
   }
 
   await validateProfileJson(issues, TEMPLATE_FILE, { template: true });
+  if (entryNames.has(EXAMPLE_FILE)) {
+    await validateProfileJson(issues, EXAMPLE_FILE, { template: false });
+  }
   for (const fileName of profileFiles.sort()) {
     await validateProfileJson(issues, fileName, { template: false });
   }
@@ -179,24 +202,37 @@ function validateLinks(issues, fileName, links) {
       return;
     }
 
-    const allowedLinkKeys = new Set(['label', 'url']);
+    const allowedLinkKeys = new Set(['type', 'label', 'url']);
     for (const key of Object.keys(link)) {
       if (!allowedLinkKeys.has(key)) {
         addIssue(issues, fileName, `${baseField}.${key}`, 'field is not allowed in profile links');
       }
     }
 
-    validateRequiredLinkString(issues, fileName, link, `${baseField}.label`, 'label', {
+    validateRequiredLinkString(issues, fileName, link, `${baseField}.type`, 'type', {
       maxLength: 40,
-      checkPrivateContact: true,
+      checkPrivateContact: false,
     });
     validateRequiredLinkString(issues, fileName, link, `${baseField}.url`, 'url', {
       maxLength: 2048,
       checkPrivateContact: false,
     });
 
+    if (typeof link.type === 'string' && !ALLOWED_LINK_TYPES.has(link.type)) {
+      addIssue(issues, fileName, `${baseField}.type`, `must be one of: ${[...ALLOWED_LINK_TYPES].join(', ')}`);
+    }
+
+    if (link.type === CUSTOM_LINK_TYPE) {
+      validateRequiredLinkString(issues, fileName, link, `${baseField}.label`, 'label', {
+        maxLength: 40,
+        checkPrivateContact: true,
+      });
+    } else if (Object.hasOwn(link, 'label')) {
+      addIssue(issues, fileName, `${baseField}.label`, 'must be omitted unless link type is custom');
+    }
+
     if (typeof link.url === 'string' && link.url !== '') {
-      validateUrl(issues, fileName, `${baseField}.url`, link.url, { protocols: ['http:', 'https:'] });
+      validateUrl(issues, fileName, `${baseField}.url`, link.url, { protocols: ['https:'] });
     }
   });
 }
