@@ -1,7 +1,0 @@
-{
-  "$schema": "../schemas/profile.schema.json",
-  "display_name": "",
-  "bio": "",
-  "avatar_url": "",
-  "links": []
-}

@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "preinstall": "node scripts/ensure-pnpm.mjs",
-    "test": "node scripts/ensure-pnpm.mjs && node --test scripts/sheets/export.test.mjs scripts/data/validate.test.mjs scripts/profiles/validate.test.mjs",
+    "test": "node scripts/ensure-pnpm.mjs && node --test scripts/sheets/export.test.mjs scripts/data/validate.test.mjs",
     "sheets:export": "node scripts/ensure-pnpm.mjs && node scripts/sheets/export.mjs",
     "sheets:export:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/export.mjs --dry-run",
     "data:validate": "node scripts/ensure-pnpm.mjs && node scripts/data/validate.mjs",
-    "profiles:validate": "node scripts/ensure-pnpm.mjs && node scripts/profiles/validate.mjs",
     "sheets:init": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs",
     "sheets:init:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs --dry-run"
   },
