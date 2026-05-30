@@ -20,7 +20,7 @@ The public reader-facing documentation should be written in Traditional Chinese 
 
 Do not describe planned infrastructure as already implemented. If a Sheet, Form, Action, schema, or deployment does not exist yet, document it as planned or `TBD`.
 
-Repository tools may use maintainer-provided service account credentials to operate the controlled Google Sheet, including initializing sheets, syncing validation helper sheets, configuring validation, exporting data, or running checks. Do not describe GitHub Actions automation, secrets, credentials, or related workflows as active until they exist in the repository and Google Workspace configuration.
+Repository tools may use maintainer-provided service account credentials to operate the controlled Google Sheet, including initializing sheets, syncing validation helper sheets, configuring validation, exporting data, or running checks. This repository has a manual GitHub Actions Sheet export workflow, but it depends on the `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret and Google Workspace access being configured outside the repository. Do not describe credentialed GitHub Actions automation as fully active until both the workflow file and the repository/Google Workspace configuration exist.
 
 Service account credentials and other secrets may exist locally for maintainers, but they must not be committed or read by LLM agents. In particular, do not open, inspect, parse, copy, summarize, or print files such as `credentials.json`, `*credentials*.json`, `*service-account*.json`, `.env`, or `.env.*`. If a task requires confirming secret presence, use file metadata, `.gitignore`, or `git status` only; do not read the secret contents.
 

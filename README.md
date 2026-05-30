@@ -51,7 +51,7 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 
 ## 預期資料流程
 
-目前預期流程如下；GitHub Actions、Pages 部署與跨 repo 整合尚未啟用前，文件與工具都應把它們描述為規劃中。
+目前預期流程如下；本 repo 已有不讀取 credentials 的 GitHub Actions CI，用來跑本機測試與 Google Sheets dry-run 檢查，也有手動觸發的 credentialed Sheet 匯出 workflow。Pages 部署與跨 repo 建置整合尚未啟用前，文件與工具都應把它們描述為規劃中。
 
 1. 從歷屆官網或其他公開活動頁面整理工作人員與講者紀錄。
 2. 將人工整理或匯入的活動出現紀錄維護在 canonical Google Sheet。
@@ -155,6 +155,15 @@ pnpm sheets:export
 `sheets:init` 會建立或更新工作表結構、欄位 note、基本資料驗證與條件格式，不會清空既有資料列。`sheets:export` 會讀取 canonical Google Sheet 並輸出到 `tmp/sheets-export/`；`tmp/` 是本機產物，不應提交。
 
 Profile 檔案格式與 `pnpm profiles:validate` 由 `credits-profiles` 維護。
+
+## GitHub Actions
+
+目前已啟用的 workflow：
+
+- `CI`：在 pull request、`master` push 與手動觸發時執行 `pnpm test`、`pnpm sheets:init:dry-run` 與 `pnpm sheets:export:dry-run`。
+- `Export Sheets data`：手動觸發時使用 `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret 匯出 canonical Google Sheet，執行 `pnpm data:validate`，並上傳 `tmp/sheets-export/` artifact。
+
+`CI` 不讀取 service account credentials、不連線 Google APIs，也不匯出 canonical Sheet。`Export Sheets data` 需要維護者先在 GitHub repository secrets 設定 `GOOGLE_SERVICE_ACCOUNT_JSON`；沒有這個 secret 時 workflow 會失敗而不會讀取任何本機 credentials。GitHub Pages 建置部署、以及與 `credits-profiles` 的資料整合仍是後續工作；在對應 workflow 與 repository 設定完成前，不應描述為已上線。
 
 ## 如何參與
 
