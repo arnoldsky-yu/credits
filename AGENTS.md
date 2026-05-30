@@ -20,7 +20,7 @@ The public reader-facing documentation should be written in Traditional Chinese 
 
 Do not describe planned infrastructure as already implemented. If a Sheet, Form, Action, schema, or deployment does not exist yet, document it as planned or `TBD`.
 
-Repository tools may use maintainer-provided service account credentials to operate the controlled Google Sheet, including initializing sheets, syncing validation helper sheets, configuring validation, exporting data, or running checks. This repository has a manual GitHub Actions Sheet export workflow, but it depends on the `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret and Google Workspace access being configured outside the repository. Do not describe credentialed GitHub Actions automation as fully active until both the workflow file and the repository/Google Workspace configuration exist.
+Repository tools may use maintainer-provided service account credentials to operate the controlled Google Sheet, including initializing sheets, syncing validation helper sheets, configuring validation, exporting data, or running checks. This repository has GitHub Actions workflows for manual Sheet export, direct missing profile-template commits to `credits-profiles`, and `people` helper synchronization from `credits-profiles`, but they depend on repository secrets such as `GOOGLE_SERVICE_ACCOUNT_JSON` and `CREDITS_PROFILES_SYNC_TOKEN` plus Google Workspace access being configured outside the repository. The cross-repository write token should belong to a SITCON Credits system identity, not an individual maintainer. Do not describe credentialed GitHub Actions automation as fully active until both the workflow files and the repository/Google Workspace configuration exist.
 
 Service account credentials and other secrets may exist locally for maintainers, but they must not be committed or read by LLM agents. In particular, do not open, inspect, parse, copy, summarize, or print files such as `credentials.json`, `*credentials*.json`, `*service-account*.json`, `.env`, or `.env.*`. If a task requires confirming secret presence, use file metadata, `.gitignore`, or `git status` only; do not read the secret contents.
 
@@ -96,7 +96,7 @@ Future automation may allow a contributor to update a profile file in that repos
 
 Profile files live at `profiles/<github_username>.json` in `credits-profiles`. The filename is the profile link key; do not add a separate identity identifier or historical appearance list inside the profile file.
 
-Future automation may also create blank profile templates in `credits-profiles` for GitHub usernames found in `appearances.github_username` when the corresponding profile file does not exist yet. The template should be empty or placeholder-only; it must not invent profile details, identity evidence, biographies, avatars, links, aliases, or historical appearance links.
+Automation may create blank profile templates in `credits-profiles` for GitHub usernames found in the `people` helper sheet when the corresponding profile file does not exist yet. The template should be empty or placeholder-only; it must not invent profile details, identity evidence, biographies, avatars, links, aliases, or historical appearance links.
 
 Existing contributors may open a GitHub PR to create or fill their own profile and state which historical appearances they believe are theirs. Treat that PR as a signal of intent and evidence for maintainer review, not as automatic approval to merge identities or rewrite historical records.
 
@@ -126,6 +126,8 @@ Do not add a separate identity identifier for profile links. Historical appearan
 Do not treat the `people` sheet as the canonical profile source or a closed allowlist. It is expected to be derived from `credits-profiles` profile files and exists to help Google Sheets operators choose known usernames while still allowing `appearances.github_username` to contain not-yet-created profile usernames.
 
 `appearances.github_username` validation should not be strict against `people`. A username outside `people` means either a blank profile template still needs to be created, or a maintainer still needs to review a contributor's requested link. It is not by itself proof that the profile exists or that an identity link has been accepted.
+
+`people` synchronization from `credits-profiles` is a helper update only. It must not add, change, or approve `appearances.github_username`, and it must not be treated as identity-merge approval.
 
 Use conditional formatting to make username states visible to Sheet operators:
 

@@ -1,0 +1,56 @@
+name: Sync people helper
+
+on:
+  repository_dispatch:
+    types:
+      - sync-people-from-profiles
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync profiles to people sheet
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Check out profiles repository
+        uses: actions/checkout@v6
+        with:
+          repository: sitcon-tw/credits-profiles
+          path: tmp/credits-profiles
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.18.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Write Google service account credentials
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "GOOGLE_SERVICE_ACCOUNT_JSON repository secret is required." >&2
+            exit 1
+          fi
+          credentials_path="$RUNNER_TEMP/google-service-account.json"
+          printf '%s' "$GOOGLE_SERVICE_ACCOUNT_JSON" > "$credentials_path"
+          chmod 600 "$credentials_path"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$credentials_path" >> "$GITHUB_ENV"
+
+      - name: Sync people helper sheet
+        run: pnpm sheets:sync-people

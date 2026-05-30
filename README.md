@@ -51,14 +51,16 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 
 ## 預期資料流程
 
-目前預期流程如下；本 repo 已有不讀取 credentials 的 GitHub Actions CI，用來跑本機測試與 Google Sheets dry-run 檢查，也有手動觸發的 credentialed Sheet 匯出 workflow。Pages 部署與跨 repo 建置整合尚未啟用前，文件與工具都應把它們描述為規劃中。
+目前預期流程如下；本 repo 已有不讀取 credentials 的 GitHub Actions CI，用來跑本機測試與 Google Sheets dry-run 檢查，也有手動觸發的 credentialed Sheet 匯出 workflow 與 profile/people helper 同步 workflow。Pages 部署尚未啟用前，文件與工具都應把它描述為規劃中。
 
 1. 從歷屆官網或其他公開活動頁面整理工作人員與講者紀錄。
 2. 將人工整理或匯入的活動出現紀錄維護在 canonical Google Sheet。
 3. 若工作人員登錄資料包含 GitHub username，可先填入 `appearances.github_username`，作為後續建立 profile template 或審核身份連結的線索。
 4. 曾經貢獻的夥伴可在 `credits-profiles` 透過 Pull Request 新增或補充自己的 profile，並在 PR 說明中指出自己認為對應的歷史紀錄。
 5. 維護者審核身份連結後，在 canonical Sheet 的 `appearances.github_username` 保留或填入對應 username。
-6. 規劃中的建置流程可結合 canonical Sheet 匯出資料與 `credits-profiles` profile 資料，產生 GitHub Pages 靜態網站。
+6. `Export Sheets data` workflow 匯出 canonical Sheet 後，若 `people.github_username` 中有 `credits-profiles` 尚不存在的 profile 檔案，會對 `credits-profiles` 開 PR 建立空白 template。這只建立 placeholder，不代表身份合併已審核。
+7. `credits-profiles` 的 profile 檔案 merge 到 `master` 後，會觸發本 repo 的 `Sync people helper` workflow，將 profile repo 中的 username 與 display name 同步回 Google Sheets 的 `people` helper sheet。
+8. 規劃中的建置流程可結合 canonical Sheet 匯出資料與 `credits-profiles` profile 資料，產生 GitHub Pages 靜態網站。
 
 ## Google Sheets 模型
 
@@ -91,6 +93,8 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 - `display_name`
 
 `people` 是選取提示與維護提醒，不是封閉允許清單。`appearances.github_username` 不在 `people` 中可能代表 profile template 尚未建立，或身份連結仍待維護者審查；這是 maintenance prompt，不是自動錯誤。
+
+`people` 由 `credits-profiles` 的 profile 檔案同步產生。若維護者先在 Google Sheets 的 `people.github_username` 填入 repo 尚不存在的 username，`Export Sheets data` workflow 會在 `credits-profiles` 開 PR 建立空白 profile template；若 profile PR 先在 `credits-profiles` merge，`Sync people helper` workflow 會把該 username 同步回 `people`。這兩個方向都只是讓 helper sheet 與 profile repo 對齊，不會自動更改 `appearances.github_username` 或完成身份合併。
 
 英文欄位可以留空。英文輸出應 fallback 到對應繁體中文欄位，不應自動翻譯，也不需要因英文欄位留空產生資料品質報告。
 
@@ -134,6 +138,8 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 pnpm test
 pnpm sheets:init:dry-run
 pnpm sheets:export:dry-run
+pnpm sheets:sync-people:dry-run
+pnpm profiles:create-missing
 ```
 
 匯出後可驗證本機資料：
@@ -143,6 +149,8 @@ pnpm data:validate
 ```
 
 `data:validate` 只讀取本機 `tmp/sheets-export/export.json` 與 `config/sheets.json`，不會連線 Google Sheets，也不會讀取 service account credentials。
+
+`sheets:sync-people:dry-run` 會從本機 `tmp/credits-profiles/profiles/` 讀取 profile 檔案並列出將同步到 `people` 的 rows，不會連線 Google Sheets。`profiles:create-missing` 會讀取本機 `tmp/sheets-export/export.json` 中的 `people` rows，並在本機 `tmp/credits-profiles/profiles/` 補上缺少的空白 profile template。
 
 需要操作 Google Sheets 時，維護者需先將 service account JSON 放在不會被 commit 的本機路徑，並設定：
 
@@ -161,9 +169,10 @@ Profile 檔案格式與 `pnpm profiles:validate` 由 `credits-profiles` 維護�
 目前已啟用的 workflow：
 
 - `CI`：在 pull request、`master` push 與手動觸發時執行 `pnpm test`、`pnpm sheets:init:dry-run` 與 `pnpm sheets:export:dry-run`。
-- `Export Sheets data`：手動觸發時使用 `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret 匯出 canonical Google Sheet，執行 `pnpm data:validate`，並上傳 `tmp/sheets-export/` artifact。
+- `Export Sheets data`：手動觸發時使用 `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret 匯出 canonical Google Sheet，執行 `pnpm data:validate`，上傳 `tmp/sheets-export/` artifact，並用 `CREDITS_PROFILES_SYNC_TOKEN` 直接 commit 到 `credits-profiles`，為缺少的 `people.github_username` 建立空白 profile template。
+- `Sync people helper`：手動觸發或收到 `credits-profiles` 的 repository dispatch 時，checkout `credits-profiles`，使用 `GOOGLE_SERVICE_ACCOUNT_JSON` 將 profile repo 中的 username 與 display name 同步到 Google Sheets 的 `people` helper sheet。
 
-`CI` 不讀取 service account credentials、不連線 Google APIs，也不匯出 canonical Sheet。`Export Sheets data` 需要維護者先在 GitHub repository secrets 設定 `GOOGLE_SERVICE_ACCOUNT_JSON`；沒有這個 secret 時 workflow 會失敗而不會讀取任何本機 credentials。GitHub Pages 建置部署、以及與 `credits-profiles` 的資料整合仍是後續工作；在對應 workflow 與 repository 設定完成前，不應描述為已上線。
+`CI` 不讀取 service account credentials、不連線 Google APIs，也不匯出 canonical Sheet。`Export Sheets data` 和 `Sync people helper` 需要維護者先在 GitHub repository secrets 設定 `GOOGLE_SERVICE_ACCOUNT_JSON`；跨 repo 寫入 `credits-profiles` 另需 `CREDITS_PROFILES_SYNC_TOKEN`。這個 token 應使用 SITCON Credits 系統專用的 bot、machine user 或 GitHub App 身份，不應使用維護者個人身份；workflow 產生的 commit author/committer 會固定為 `SITCON Credits System <credits-system@sitcon.org>`。沒有必要 secret 時 workflow 會失敗而不會讀取任何本機 credentials。GitHub Pages 建置部署仍是後續工作；在對應 workflow 與 repository 設定完成前，不應描述為已上線。
 
 ## 如何參與
 

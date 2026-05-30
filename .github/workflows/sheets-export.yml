@@ -55,3 +55,40 @@ jobs:
           name: sheets-export
           path: tmp/sheets-export/
           if-no-files-found: error
+
+      - name: Check out profiles repository
+        uses: actions/checkout@v6
+        with:
+          repository: sitcon-tw/credits-profiles
+          path: tmp/credits-profiles
+          persist-credentials: false
+
+      - name: Create missing blank profile templates
+        run: pnpm profiles:create-missing
+
+      - name: Validate generated profiles
+        working-directory: tmp/credits-profiles
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm profiles:validate
+
+      - name: Commit profile templates to profiles repository
+        env:
+          CREDITS_PROFILES_SYNC_TOKEN: ${{ secrets.CREDITS_PROFILES_SYNC_TOKEN }}
+        run: |
+          if [ -z "$(git -C tmp/credits-profiles status --porcelain -- profiles)" ]; then
+            echo "No missing profile templates."
+            exit 0
+          fi
+          if [ -z "$CREDITS_PROFILES_SYNC_TOKEN" ]; then
+            echo "CREDITS_PROFILES_SYNC_TOKEN repository secret is required to push credits-profiles templates." >&2
+            exit 1
+          fi
+
+          cd tmp/credits-profiles
+          git config user.name "SITCON Credits System"
+          git config user.email "credits-system@sitcon.org"
+          git add profiles
+          git commit -m "chore: add blank profile templates"
+          git push "https://x-access-token:${CREDITS_PROFILES_SYNC_TOKEN}@github.com/sitcon-tw/credits-profiles.git" HEAD:master
