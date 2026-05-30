@@ -1,0 +1,68 @@
+name: Review profile PR
+
+on:
+  repository_dispatch:
+    types:
+      - review-profile-pr
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Review profile PR against canonical appearances
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out credits repository
+        uses: actions/checkout@v6
+
+      - name: Check out profiles repository
+        uses: actions/checkout@v6
+        with:
+          repository: sitcon-tw/credits-profiles
+          path: tmp/credits-profiles
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.18.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Write Google service account credentials
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "GOOGLE_SERVICE_ACCOUNT_JSON repository secret is required." >&2
+            exit 1
+          fi
+          credentials_path="$RUNNER_TEMP/google-service-account.json"
+          printf '%s' "$GOOGLE_SERVICE_ACCOUNT_JSON" > "$credentials_path"
+          chmod 600 "$credentials_path"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$credentials_path" >> "$GITHUB_ENV"
+
+      - name: Export canonical Sheet data
+        run: pnpm sheets:export -- --output-dir "$RUNNER_TEMP/sheets-export"
+
+      - name: Approve or comment on profile PR
+        working-directory: tmp/credits-profiles
+        env:
+          GITHUB_TOKEN: ${{ secrets.CREDITS_PROFILES_SYNC_TOKEN }}
+          PROFILE_REVIEW_TOKEN: ${{ secrets.CREDITS_PROFILES_SYNC_TOKEN }}
+        run: >-
+          node scripts/profiles/auto-review.mjs
+          --owner "sitcon-tw"
+          --repo "credits-profiles"
+          --pull-number "${{ github.event.client_payload.pull_number }}"
+          --head-sha "${{ github.event.client_payload.head_sha }}"
+          --export "$RUNNER_TEMP/sheets-export/export.json"
