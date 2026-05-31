@@ -66,3 +66,5 @@ jobs:
           --pull-number "${{ github.event.client_payload.pull_number }}"
           --head-sha "${{ github.event.client_payload.head_sha }}"
           --export "$RUNNER_TEMP/sheets-export/export.json"
+          --auto-merge
+          --merge-method "squash"

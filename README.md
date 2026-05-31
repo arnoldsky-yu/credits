@@ -171,7 +171,7 @@ Profile 檔案格式與 `pnpm profiles:validate` 由 `credits-profiles` 維護�
 - `CI`：在 pull request、`master` push 與手動觸發時執行 `pnpm test`、`pnpm sheets:init:dry-run` 與 `pnpm sheets:export:dry-run`。
 - `Export Sheets data`：手動觸發時使用 `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret 匯出 canonical Google Sheet，執行 `pnpm data:validate`，上傳 `tmp/sheets-export/` artifact，並用 `CREDITS_PROFILES_SYNC_TOKEN` 直接 commit 到 `credits-profiles`，為缺少的 `people.github_username` 建立空白 profile template。
 - `Sync people helper`：手動觸發或收到 `credits-profiles` 的 repository dispatch 時，checkout `credits-profiles`，使用 `GOOGLE_SERVICE_ACCOUNT_JSON` 將 profile repo 中的 username 與 display name 同步到 Google Sheets 的 `people` helper sheet。
-- `Review profile PR`：收到 `credits-profiles` 在 `CI` 成功後送出的 repository dispatch 時，匯出 canonical Google Sheet，確認 profile PR 的 username 是否已出現在 `appearances.github_username`；符合條件時用 `CREDITS_PROFILES_SYNC_TOKEN` approve，不符合時在 PR 留言提醒維護者調整或確認 appearances 資料。
+- `Review profile PR`：收到 `credits-profiles` 在 `CI` 成功後送出的 repository dispatch 時，匯出 canonical Google Sheet，確認 profile PR 的 username 是否已出現在 `appearances.github_username`；符合條件時用 `CREDITS_PROFILES_SYNC_TOKEN` approve 並以 squash merge 合併，不符合時在 PR 留言提醒維護者調整或確認 appearances 資料。
 
 `CI` 不讀取 service account credentials、不連線 Google APIs，也不匯出 canonical Sheet。`Export Sheets data`、`Sync people helper` 和 `Review profile PR` 需要維護者先在 GitHub repository secrets 設定 `GOOGLE_SERVICE_ACCOUNT_JSON`；跨 repo 寫入、留言或 approve `credits-profiles` 另需 `CREDITS_PROFILES_SYNC_TOKEN`。這個 token 應使用 SITCON Credits 系統專用的 bot、machine user 或 GitHub App 身份，不應使用維護者個人身份；workflow 產生的 commit author/committer 會固定為 `SITCON Credits System <credits-system@sitcon.org>`。沒有必要 secret 時 workflow 會失敗而不會讀取任何本機 credentials。GitHub Pages 建置部署仍是後續工作；在對應 workflow 與 repository 設定完成前，不應描述為已上線。
 
