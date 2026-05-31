@@ -54,11 +54,23 @@ jobs:
       - name: Export canonical Sheet data
         run: pnpm sheets:export --output-dir "$RUNNER_TEMP/sheets-export"
 
+      - name: Create credits assistant token
+        id: credits-assistant-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SITCON_CREDITS_ASSISTANT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SITCON_CREDITS_ASSISTANT_APP_PRIVATE_KEY }}
+          owner: sitcon-tw
+          repositories: credits-profiles
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: write
+
       - name: Approve or comment on profile PR
         working-directory: tmp/credits-profiles
         env:
-          GITHUB_TOKEN: ${{ secrets.CREDITS_PROFILES_SYNC_TOKEN }}
-          PROFILE_REVIEW_TOKEN: ${{ secrets.CREDITS_PROFILES_SYNC_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.credits-assistant-token.outputs.token }}
+          PROFILE_REVIEW_TOKEN: ${{ steps.credits-assistant-token.outputs.token }}
         run: >-
           node scripts/profiles/auto-review.mjs
           --owner "sitcon-tw"

@@ -56,12 +56,22 @@ jobs:
           path: tmp/sheets-export/
           if-no-files-found: error
 
+      - name: Create credits assistant token
+        id: credits-assistant-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SITCON_CREDITS_ASSISTANT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SITCON_CREDITS_ASSISTANT_APP_PRIVATE_KEY }}
+          owner: sitcon-tw
+          repositories: credits-profiles
+          permission-contents: write
+
       - name: Check out profiles repository
         uses: actions/checkout@v6
         with:
           repository: sitcon-tw/credits-profiles
           path: tmp/credits-profiles
-          persist-credentials: false
+          token: ${{ steps.credits-assistant-token.outputs.token }}
 
       - name: Create missing blank profile templates
         run: pnpm profiles:create-missing
@@ -75,20 +85,26 @@ jobs:
 
       - name: Commit profile templates to profiles repository
         env:
-          CREDITS_PROFILES_SYNC_TOKEN: ${{ secrets.CREDITS_PROFILES_SYNC_TOKEN }}
+          GH_TOKEN: ${{ steps.credits-assistant-token.outputs.token }}
+          CREDITS_ASSISTANT_APP_SLUG: ${{ steps.credits-assistant-token.outputs.app-slug }}
         run: |
           if [ -z "$(git -C tmp/credits-profiles status --porcelain -- profiles)" ]; then
             echo "No missing profile templates."
             exit 0
           fi
-          if [ -z "$CREDITS_PROFILES_SYNC_TOKEN" ]; then
-            echo "CREDITS_PROFILES_SYNC_TOKEN repository secret is required to push credits-profiles templates." >&2
+          if [ -z "$GH_TOKEN" ]; then
+            echo "SITCON Credits Assistant GitHub App token is required to push credits-profiles templates." >&2
+            exit 1
+          fi
+          if [ -z "$CREDITS_ASSISTANT_APP_SLUG" ]; then
+            echo "GitHub App slug is required to configure the commit author." >&2
             exit 1
           fi
 
+          app_user_id="$(gh api "/users/${CREDITS_ASSISTANT_APP_SLUG}[bot]" --jq .id)"
           cd tmp/credits-profiles
-          git config user.name "SITCON Credits System"
-          git config user.email "credits-system@sitcon.org"
+          git config user.name "SITCON Credits Assistant"
+          git config user.email "${app_user_id}+${CREDITS_ASSISTANT_APP_SLUG}[bot]@users.noreply.github.com"
           git add profiles
           git commit -m "chore: add blank profile templates"
-          git push "https://x-access-token:${CREDITS_PROFILES_SYNC_TOKEN}@github.com/sitcon-tw/credits-profiles.git" HEAD:master
+          git push origin HEAD:master
