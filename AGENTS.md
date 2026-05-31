@@ -8,7 +8,7 @@ The public reader-facing documentation should be written in Traditional Chinese 
 
 - Preserve public contribution records for SITCON-related events.
 - Help contributors, organizers, and community members find historical staff and speaker records without searching every event website manually.
-- Allow contributors to opt in to public profile information such as a preferred display name, biography, avatar, and links.
+- Allow contributors to opt in to public profile information such as a preferred display name, biography, avatar, public email, and links.
 - Keep data maintenance practical for current SITCON staff who already work in the Google Workspace ecosystem.
 
 ## Data Authority
@@ -20,13 +20,13 @@ The public reader-facing documentation should be written in Traditional Chinese 
 
 Do not describe planned infrastructure as already implemented. If a Sheet, Form, Action, schema, or deployment does not exist yet, document it as planned or `TBD`.
 
-Repository tools may use maintainer-provided service account credentials to operate the controlled Google Sheet, including initializing sheets, syncing validation helper sheets, configuring validation, exporting data, or running checks. This repository has GitHub Actions workflows for manual Sheet export, direct missing profile-template commits to `credits-profiles`, `people` helper synchronization from `credits-profiles`, and canonical appearances checks for profile PR auto-review, but they depend on repository secrets such as `GOOGLE_SERVICE_ACCOUNT_JSON` plus the `SITCON Credits Assistant` GitHub App installation and credentials configured outside the repository. Cross-repository writes, comments, reviews, and merges should use `sitcon-credits-assistant[bot]`, not an individual maintainer token. Do not describe credentialed GitHub Actions automation as fully active until both the workflow files and the repository/Google Workspace/GitHub App configuration exist.
+Repository tools may use maintainer-provided service account credentials to operate the controlled Google Sheet, including initializing sheets, syncing validation helper sheets, configuring validation, exporting data, or running checks. This repository has GitHub Actions workflows for manual Sheet export, direct missing profile-template commits to `credits-profiles`, `people` helper synchronization from `credits-profiles`, and canonical appearances checks for profile PR auto-review, but they depend on repository secrets such as `GOOGLE_SERVICE_ACCOUNT_JSON` plus the `SITCON Credits Assistant` GitHub App installation and credentials configured outside the repository. Cross-repository writes, comments, reviews, and merges should use `sitcon-credits-assistant[bot]`, not an individual maintainer token. The workflow files exist in this repository, but do not describe credentialed GitHub Actions automation as operational in a live repository unless the repository/Google Workspace/GitHub App configuration also exists.
 
 Service account credentials and other secrets may exist locally for maintainers, but they must not be committed or read by LLM agents. In particular, do not open, inspect, parse, copy, summarize, or print files such as `credentials.json`, `*credentials*.json`, `*service-account*.json`, `.env`, or `.env.*`. If a task requires confirming secret presence, use file metadata, `.gitignore`, or `git status` only; do not read the secret contents.
 
 If official event websites and the reviewed canonical Sheet disagree, public output should follow the maintainer-reviewed canonical Sheet. Do not resolve conflicts yourself unless the repository documentation or a maintainer explicitly gives the rule for that case.
 
-Low-risk self-service profile updates are expected to happen in the separate `sitcon-tw/credits-profiles` repository. Do not describe cross-repository automation, validation workflow, branch protection or ruleset, merge permissions, or generated profile templates as active until they exist in the relevant repository configuration.
+Low-risk self-service profile updates happen in the separate `sitcon-tw/credits-profiles` repository. The two repositories now contain workflow definitions for trusted profile validation, cross-repository review dispatch, direct generated profile-template commits, and people-helper synchronization. Do not describe branch protection or ruleset behavior, merge permissions, repository secrets, Google Workspace access, or GitHub App installation as active unless those settings are confirmed.
 
 ## Scope
 
@@ -92,7 +92,7 @@ Do not invent a policy that hides, deletes, or rewrites historical event records
 
 Profile files are maintained in the separate `sitcon-tw/credits-profiles` repository so self-service profile PRs do not mix with this repository's data model, Google Sheets tooling, and site development history.
 
-Future automation may allow a contributor to update a profile file in that repository when it corresponds to their own GitHub username. This is only appropriate for low-risk, opt-in profile fields such as preferred display name, biography, avatar, and public links.
+Automation may allow a contributor to update a profile file in that repository when it corresponds to their own GitHub username. This is only appropriate for low-risk, opt-in profile fields such as preferred display name, biography, avatar, public email, and public links.
 
 Profile files live at `profiles/<github_username>.json` in `credits-profiles`. The filename is the profile link key; do not add a separate identity identifier or historical appearance list inside the profile file.
 
@@ -119,7 +119,7 @@ The expected operational sheets are:
 
 - `appearances`: maintainer-edited public contribution appearances.
 - `events`: maintainer-edited event metadata and event-level source URLs.
-- `people`: a planned generated selection helper with only `github_username` and `display_name`.
+- `people`: a generated selection helper with only `github_username` and `display_name`.
 
 Do not add a separate identity identifier for profile links. Historical appearances link to profile files through `github_username`.
 
@@ -201,6 +201,9 @@ If a source is outside this repository, do not claim that it has been corrected.
 ## Documentation Expectations
 
 - `README.md` is the friendly starting point for community members and maintainers.
+- `docs/data-model.md` is the reader-facing source for data authority, scope, Sheets model, identity boundaries, and privacy policy.
+- `docs/workflows.md` is the reader-facing source for cross-repository GitHub Actions flowcharts and automation boundaries.
+- `docs/maintainer-guide.md` is the reader-facing source for local tools, credentialed operations, and maintainer setup.
 - `AGENTS.md` is the local instruction entrypoint for LLM agents.
 - Keep `AGENTS.md` focused on agent-facing policy, safety boundaries, and routing rules. Do not turn it into the complete command manual as repository tooling grows.
 - Future technical docs should distinguish planned behavior from implemented behavior.
