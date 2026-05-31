@@ -66,3 +66,9 @@ pnpm profiles:create-missing
 ```
 
 更多本地工具、需要憑證的 Google Sheets 操作與 GitHub Actions 設定請看 [維護者指南](docs/maintainer-guide.md)。
+
+## 授權與資料使用
+
+本 repo 的程式、設定與文件以 [MIT License](LICENSE) 授權。
+
+歷史貢獻紀錄資料的使用脈絡、來源邊界與 profile 資料關係請看 [資料使用聲明](DATA_USAGE.md)。MIT License 不代表可以脫離 SITCON Credits 的社群感謝與可追溯來源脈絡，任意改寫、合併或再發布個人相關資料。
