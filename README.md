@@ -20,13 +20,13 @@ GitHub Pages：TBD
 
 本 repo 維護 SITCON Credits 的核心資料模型、Google Sheets 工具、資料驗證、匯出流程，以及未來網站建置所需的基礎。它負責的是「歷史貢獻紀錄」：某個公開名稱在某場 SITCON 相關活動中擔任什麼角色，以及這筆資料的來源。
 
-個人公開簡介放在獨立的 [`sitcon-tw/credits-profiles`](https://github.com/sitcon-tw/credits-profiles) repo。那裡只存放本人 opt-in 提供的 profile 資料，例如偏好的顯示名稱、簡介、頭像、公開 email 與公開連結。
+個人公開簡介放在獨立的 [`sitcon-tw/credits-profiles`](https://github.com/sitcon-tw/credits-profiles) repo。那裡的 `profiles/` 存放本人 opt-in 提供的 profile 資料，例如偏好的顯示名稱、簡介、頭像、公開 email 與公開連結；`site-profiles/` 存放維護者從歷屆活動公開網站整理出的顯示用名稱與頭像。
 
 這個分工很重要：
 
 - 歷史貢獻紀錄由維護者在 canonical Google Sheet 中整理與審核。
 - 個人 profile 由 contributor 透過 GitHub Pull Request 自助新增或更新。
-- `appearances.github_username` 可以把歷史紀錄連到 profile，但這個連結仍是維護者審核後的資料判斷，不是 profile PR 自動完成的身份合併。
+- `appearances.github_username` 可以填裸 GitHub username 連到已審核 profile，也可以填 `site:<source_person_id>` 連到同一活動網站來源中的顯示用 profile；裸 username 連結仍是維護者審核後的資料判斷，不是 profile PR 自動完成的身份合併。
 
 ## 目前狀態
 

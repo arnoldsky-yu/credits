@@ -30,11 +30,11 @@ flowchart TD
 - `Profile self-service guard` 在 `pull_request_target` 上檢查 self-service PR 是否只修改 PR 作者自己的單一 `profiles/<github_username>.json`。
 - `Trusted profile review` 只使用 base repository 的可信任程式碼，透過 GitHub API 讀取 PR head 的單一 profile JSON，檢查格式與 PR template 必要確認事項。
 - `Trusted profile review` 通過後 dispatch 到 `sitcon-tw/credits`，由 `Review profile PR` 在主 repo 的 secrets 之下匯出 canonical Google Sheet。
-- `Review profile PR` 會確認同一個 head SHA 的 `Check trusted profile PR` 與 `Check profile PR scope` 都成功，且 profile username 已存在於 `appearances.github_username`。
+- `Review profile PR` 會確認同一個 head SHA 的 `Check trusted profile PR` 與 `Check profile PR scope` 都成功，且 profile username 已以裸 GitHub username 形式存在於 `appearances.github_username`。
 - 符合條件時，workflow 會用 `SITCON Credits Assistant` GitHub App 核准並以 squash merge 合併 profile PR。
 - username 尚未出現在 canonical appearances 時，workflow 只會留言提醒維護者，不會自動建立身份連結。
 
-自動核准與合併只代表 profile PR 符合低風險自助更新條件，而且 username 已經被 canonical data 參照。它不代表 workflow 建立了新的身份合併，也不代表它處理了歷史資料更正、刪除 profile、rename profile 或隱私政策例外。
+自動核准與合併只代表 profile PR 符合低風險自助更新條件，而且 username 已經被 canonical data 以裸值參照。它不代表 workflow 建立了新的身份合併，也不代表它處理了歷史資料更正、刪除 profile、rename profile 或隱私政策例外。`site:<source_person_id>` 不會讓 profile PR 自動通過。
 
 ## Sheets 匯出與空白 profile template
 
@@ -54,7 +54,13 @@ flowchart TD
 
 `Export Sheets data` 是手動觸發、需要憑證的 workflow。它會匯出 canonical Sheet、驗證本機資料、上傳 artifact，並檢查 `people.github_username` 中是否有 `credits-profiles` 尚不存在的 profile 檔案。
 
-若缺少 profile 檔案，workflow 會建立空白 template，驗證 profile 格式，然後由 `SITCON Credits Assistant` GitHub App 直接 commit 到 `credits-profiles` 的 `master`。這不會開 PR，也不會填入簡介、頭像、連結、別名、身份證據或歷史 appearance 連結。
+若缺少 profile 檔案，workflow 會建立空白 template，驗證 profile 格式，然後由 `SITCON Credits Assistant` GitHub App 直接 commit 到 `credits-profiles` 的 `master`。這不會開 PR，也不會填入簡介、頭像、連結、別名、身份證據或歷史 appearance 連結。`site:` profile reference 不會產生空白 profile template。
+
+## 活動網站來源 profile
+
+`appearances.github_username` 可以填 `site:<source_person_id>`，表示這筆 appearance 暫時連到同一列 `event_id` 對應的 `credits-profiles/site-profiles/<event_id>/<source_person_id>.json`。site profile 只提供活動網站來源的顯示名稱與頭像，不是 contributor-owned profile，也不代表身份合併。
+
+`site-profiles/` 只由維護者直接 commit，不接受一般 Pull Request 修改，不觸發 `people` helper 同步，也不會被 profile PR auto-review 當成 username。
 
 ## people helper 同步
 
@@ -70,7 +76,7 @@ flowchart LR
   keepPending --> people["寫入 people helper sheet"]
 ```
 
-`people` 是 helper sheet，不是 canonical profile source，也不是允許清單。同步 profile repo 到 `people` 只是在 Google Sheets 中提供選取提示與維護提醒；它不會新增、修改或核准任何 `appearances.github_username`。
+`people` 是 helper sheet，不是 canonical profile source，也不是允許清單。同步 profile repo 到 `people` 只是在 Google Sheets 中提供選取提示與維護提醒；它不會新增、修改或核准任何 `appearances.github_username`。`site:` profile reference 不會同步到 `people`。
 
 ## Branch Ruleset 建議
 

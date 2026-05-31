@@ -24,9 +24,9 @@ pnpm data:validate
 
 `data:validate` 只讀取本機 `tmp/sheets-export/export.json` 與 `config/sheets.json`，不會連線 Google Sheets，也不會讀取 service account credentials。
 
-`sheets:sync-people:dry-run` 會從本機 `tmp/credits-profiles/profiles/` 讀取 profile 檔案並列出將同步到 `people` 的 rows，不會連線 Google Sheets。`profiles:create-missing` 會讀取本機 `tmp/sheets-export/export.json` 中的 `people` rows，並在本機 `tmp/credits-profiles/profiles/` 補上缺少的空白 profile template。
+`sheets:sync-people:dry-run` 會從本機 `tmp/credits-profiles/profiles/` 讀取 profile 檔案並列出將同步到 `people` 的 rows，不會連線 Google Sheets。`profiles:create-missing` 會讀取本機 `tmp/sheets-export/export.json` 中的 `people` rows，並在本機 `tmp/credits-profiles/profiles/` 補上缺少的空白 profile template。這兩個工具都不處理 `site-profiles/`。
 
-Profile 檔案格式與 `pnpm profiles:validate` 由 `credits-profiles` 維護。
+Profile 檔案格式、site profile 檔案格式、`pnpm profiles:validate` 與 `pnpm site-profiles:validate` 由 `credits-profiles` 維護。
 
 ## 需要憑證的 Google Sheets 操作
 
@@ -67,6 +67,8 @@ LLM agents 不應讀取 service account credentials，也不應在沒有明確�
 `Export Sheets data` 會讀取 `people.github_username`，為 `credits-profiles` 尚不存在的 username 建立空白 profile template。這是讓 contributor 後續可以自助補資料的佔位範本，不代表身份連結已審核，也不會填入 profile 細節。
 
 `Sync people helper` 會讀取 `credits-profiles/profiles/*.json`，同步 `github_username` 與 `display_name` 到 Google Sheets 的 `people` helper sheet。同步時會保留 Sheet 中已存在但 profile repo 尚未有檔案的待處理 username，方便維護者先在 `appearances.github_username` 或 `people` 中留下後續 template 建立線索。
+
+`appearances.github_username` 也可以填 `site:<source_person_id>`，連到同一列 `event_id` 對應的 `credits-profiles/site-profiles/<event_id>/<source_person_id>.json`。site profile 只作為活動網站來源顯示資料，不進 `people` helper、不產生空白 profile template，也不讓自助 profile PR 自動通過。本人日後送出 profile PR 時，維護者人工確認後才把 `site:` 改成裸 GitHub username。
 
 ## 仍未啟用的部分
 

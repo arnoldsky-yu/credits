@@ -8,7 +8,9 @@ SITCON Credits 刻意把「歷史貢獻紀錄」和「個人公開簡介」分�
 
 歷史貢獻紀錄記錄某個公開名稱在某場 SITCON 相關活動中擔任什麼角色，例如工作人員組別、講者身份、場次類型與來源 URL。這些紀錄來自歷屆活動官網等公開來源，經整理與審核後，以 canonical Google Sheet 作為主要發布資料源。
 
-個人公開簡介是本人 opt-in 提供的 profile 資料，例如偏好的顯示名稱、簡介、頭像、公開 email 與公開連結。這些資料由 [`credits-profiles`](https://github.com/sitcon-tw/credits-profiles) 維護，適合透過 GitHub Pull Request 讓本人或維護者更新。
+個人公開簡介是本人 opt-in 提供的 profile 資料，例如偏好的顯示名稱、簡介、頭像、公開 email 與公開連結。這些資料由 [`credits-profiles`](https://github.com/sitcon-tw/credits-profiles) 的 `profiles/` 維護，適合透過 GitHub Pull Request 讓本人或維護者更新。
+
+活動網站來源 profile 是維護者從歷屆活動公開網站整理出的顯示用名稱與頭像。這些資料由 `credits-profiles` 的 `site-profiles/` 維護，只作為前端顯示 fallback，不是本人 opt-in，也不是身份合併。
 
 ## 收錄範圍
 
@@ -33,7 +35,7 @@ SITCON Credits 刻意把「歷史貢獻紀錄」和「個人公開簡介」分�
 
 Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官網與 canonical Sheet 中的審核資料不同，公開輸出以維護者在 canonical Sheet 中確認後的資料為準。
 
-`credits-profiles` 是個人公開簡介的來源，不是歷史紀錄或身份合併的權威。某個 GitHub username 有 profile 檔案，只代表該 username 有一份 opt-in profile；某筆歷史 appearance 是否連到該 username，仍以 canonical Sheet 中經維護者審核的 `github_username` 為準。
+`credits-profiles` 是 profile 顯示資料的來源，不是歷史紀錄或身份合併的權威。某個 GitHub username 有 profile 檔案，只代表該 username 有一份 opt-in profile；某筆歷史 appearance 是否連到該 username，仍以 canonical Sheet 中經維護者審核的 `github_username` 裸值為準。`site:<source_person_id>` 只代表同一活動網站來源中的顯示用 profile。
 
 ## Google Sheets
 
@@ -51,7 +53,7 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 - `role_group_zh` / `role_group_en`：公開顯示的組別或場次類型。工作人員填組別，講者填演講或場次類型。
 - `role_title_zh` / `role_title_en`：公開顯示的身份。工作人員填組長、組員等；講者填講者、主持人、與談人等。
 - `display_name_at_event`：該活動當時公開顯示的名稱。
-- `github_username`：連到 profile 的 GitHub username。可以暫時填入尚未有 profile 檔案的 username，作為後續維護線索。
+- `github_username`：profile reference。填裸 GitHub username 表示維護者已審核連到 contributor-owned profile；填 `site:<source_person_id>` 表示同一列 `event_id` 對應活動網站來源中的顯示用 profile。
 - `source_url_override`：只有這筆紀錄的來源不同於活動層級來源時才填寫。
 - `notes`：維護備註，不放私人聯絡資訊。
 
@@ -77,9 +79,9 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 - `github_username`
 - `display_name`
 
-`people` 是選取提示與維護提醒，不是封閉允許清單。`appearances.github_username` 不在 `people` 中可能代表 profile template 尚未建立，或身份連結仍待維護者審查；這是維護提醒，不是自動錯誤。
+`people` 是選取提示與維護提醒，不是封閉允許清單。`appearances.github_username` 的裸 GitHub username 不在 `people` 中可能代表 profile template 尚未建立，或身份連結仍待維護者審查；這是維護提醒，不是自動錯誤。`site:` profile reference 不會出現在 `people`。
 
-`people` 由 `credits-profiles` 的 profile 檔案同步產生，也可以保留維護者在 Sheet 中先填入、但 profile 檔案尚未存在的待處理 username。這兩個方向都只是讓 helper sheet 與 profile repo 對齊，不會自動更改 `appearances.github_username` 或完成身份合併。
+`people` 由 `credits-profiles/profiles/` 的 contributor-owned profile 檔案同步產生，也可以保留維護者在 Sheet 中先填入、但 profile 檔案尚未存在的待處理 username。這兩個方向都只是讓 helper sheet 與 profile repo 對齊，不會自動更改 `appearances.github_username` 或完成身份合併。
 
 ## 身份與 profile 原則
 
@@ -95,6 +97,8 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 - LLM 推論或過往記憶
 
 本人提出 profile PR 並指出自己對應到哪些歷史 appearance，是建立關聯意願與審核線索，不是自動身份合併。若不確定是否為同一人，應先保持紀錄分開。
+
+若某筆 appearance 目前使用 `site:<source_person_id>`，本人日後提出 `profiles/<github_username>.json` PR 時，維護者應人工確認後才把 Sheet 中的 profile reference 改成裸 GitHub username。不要把 `site:` reference 自動轉成 username。
 
 ## 隱私與更正
 

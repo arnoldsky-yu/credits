@@ -51,6 +51,7 @@ Use an appearance-first model:
 - Preserve each public event appearance as its own record when needed.
 - Link appearances to a GitHub username profile only when a maintainer has accepted that identity link.
 - `appearances.github_username` may temporarily contain a GitHub username that does not yet have a repository profile file when maintainers use it to trigger future blank profile-template creation.
+- `appearances.github_username` may contain `site:<source_person_id>` to refer to `credits-profiles/site-profiles/<event_id>/<source_person_id>.json` for display-only public event website data. This is not a GitHub username, not contributor opt-in, and not identity-merge approval.
 - Maintainer judgment is allowed, especially during initial dataset construction.
 - Preserve existing maintainer-approved identity links unless the user explicitly asks to review or change them.
 
@@ -96,7 +97,7 @@ Automation may allow a contributor to update a profile file in that repository w
 
 Profile files live at `profiles/<github_username>.json` in `credits-profiles`. The filename is the profile link key; do not add a separate identity identifier or historical appearance list inside the profile file.
 
-Automation may create blank profile templates in `credits-profiles` for GitHub usernames found in the `people` helper sheet when the corresponding profile file does not exist yet. The template should be empty or placeholder-only; it must not invent profile details, identity evidence, biographies, avatars, links, aliases, or historical appearance links.
+Automation may create blank profile templates in `credits-profiles` for GitHub usernames found in the `people` helper sheet when the corresponding profile file does not exist yet. The template should be empty or placeholder-only; it must not invent profile details, identity evidence, biographies, avatars, links, aliases, or historical appearance links. `site:` profile references must not create blank contributor profile templates.
 
 Existing contributors may open a GitHub PR to create or fill their own profile and state which historical appearances they believe are theirs. Treat that PR as a signal of intent and evidence for maintainer review, not as automatic approval to merge identities or rewrite historical records.
 
@@ -125,13 +126,14 @@ Do not add a separate identity identifier for profile links. Historical appearan
 
 Do not treat the `people` sheet as the canonical profile source or a closed allowlist. It is expected to be derived from `credits-profiles` profile files and exists to help Google Sheets operators choose known usernames while still allowing `appearances.github_username` to contain not-yet-created profile usernames.
 
-`appearances.github_username` validation should not be strict against `people`. A username outside `people` means either a blank profile template still needs to be created, or a maintainer still needs to review a contributor's requested link. It is not by itself proof that the profile exists or that an identity link has been accepted.
+`appearances.github_username` validation should not be strict against `people`. A username outside `people` means either a blank profile template still needs to be created, or a maintainer still needs to review a contributor's requested link. It is not by itself proof that the profile exists or that an identity link has been accepted. `site:` profile references intentionally do not appear in `people`.
 
 `people` synchronization from `credits-profiles` is a helper update only. It must not add, change, or approve `appearances.github_username`, and it must not be treated as identity-merge approval.
 
 Use conditional formatting to make username states visible to Sheet operators:
 
 - Highlight `appearances.github_username` values that are not present in `people.github_username`.
+- Do not highlight `appearances.github_username` values that start with `site:` as missing `people` entries.
 - Highlight `people.github_username` values that are not used by any `appearances.github_username`.
 - Treat these highlights as maintenance prompts, not errors or identity decisions.
 
