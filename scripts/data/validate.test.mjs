@@ -115,6 +115,37 @@ test('validateExportPayload treats missing people profile as a warning', () => {
   assert(issues.some((issue) => issue.sheet === 'people' && issue.field === 'github_username'));
 });
 
+test('validateExportPayload accepts site profile references without people warnings', () => {
+  const payload = basePayload();
+  payload.sheets.appearances.rows[0].github_username = 'site:speaker-1';
+
+  const issues = validateExportPayload(payload, config);
+
+  assert.deepEqual(countIssues(issues), { error: 0, warning: 1 });
+  assert(issues.every((issue) => issue.sheet !== 'appearances' || issue.field !== 'github_username'));
+  assert(issues.some((issue) => issue.sheet === 'people' && issue.field === 'github_username'));
+});
+
+test('validateExportPayload rejects malformed site profile references', () => {
+  const payload = basePayload();
+  payload.sheets.appearances.rows[0].github_username = 'site:';
+
+  const issues = validateExportPayload(payload, config);
+
+  assert.equal(countIssues(issues).error, 1);
+  assert(issues.some((issue) => issue.message.includes('site:<lowercase-source-person-id>')));
+});
+
+test('validateExportPayload rejects unknown profile reference prefixes', () => {
+  const payload = basePayload();
+  payload.sheets.appearances.rows[0].github_username = 'speaker:alice';
+
+  const issues = validateExportPayload(payload, config);
+
+  assert.equal(countIssues(issues).error, 1);
+  assert(issues.some((issue) => issue.message.includes('unknown profile reference prefix')));
+});
+
 test('validateExportPayload reports source and relation errors', () => {
   const payload = basePayload();
   payload.sheets.appearances.rows[0].event_id = 'missing-event';

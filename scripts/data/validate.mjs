@@ -5,6 +5,7 @@ import { DEFAULT_CONFIG_PATH, getColumnNames, readSheetsConfig } from '../lib/sh
 
 const DEFAULT_EXPORT_PATH = 'tmp/sheets-export/export.json';
 const GITHUB_USERNAME_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
+const SITE_PROFILE_REF_PATTERN = /^site:[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 const CLASSIFICATION_LABELS = new Set(['staff', 'speaker', '工作人員', '講者']);
 
 export async function main(argv = process.argv.slice(2)) {
@@ -245,23 +246,35 @@ function validateAppearances(issues, appearances, eventsById, peopleByUsername) 
     });
 
     if (appearance.github_username) {
-      if (!isLikelyGithubUsername(appearance.github_username)) {
+      const profileRef = parseProfileReference(appearance.github_username);
+      if (profileRef.type === 'site') {
+        // Site profile references are resolved with this row's event_id.
+      } else if (profileRef.type === 'invalid') {
         addIssue(
           issues,
-          'warning',
+          'error',
           'appearances',
           rowNumber(appearance),
           'github_username',
-          'value does not match GitHub username syntax',
+          profileRef.message,
         );
-      } else if (!peopleByUsername.has(normalizeGithubUsername(appearance.github_username))) {
+      } else if (profileRef.type === 'invalid-github') {
         addIssue(
           issues,
           'warning',
           'appearances',
           rowNumber(appearance),
           'github_username',
-          `profile username "${appearance.github_username}" is not present in people yet`,
+          profileRef.message,
+        );
+      } else if (!peopleByUsername.has(normalizeGithubUsername(profileRef.value))) {
+        addIssue(
+          issues,
+          'warning',
+          'appearances',
+          rowNumber(appearance),
+          'github_username',
+          `profile username "${profileRef.value}" is not present in people yet`,
         );
       }
     }
@@ -278,7 +291,9 @@ function validateUnusedPeople(issues, people, appearances) {
     appearances
       .map((appearance) => appearance.github_username)
       .filter(Boolean)
-      .map((username) => normalizeGithubUsername(username)),
+      .map((value) => parseProfileReference(value))
+      .filter((profileRef) => profileRef.type === 'github')
+      .map((profileRef) => normalizeGithubUsername(profileRef.value)),
   );
 
   for (const person of people) {
@@ -349,6 +364,39 @@ function containsPrivateContact(value) {
 
 function isLikelyGithubUsername(value) {
   return GITHUB_USERNAME_PATTERN.test(value);
+}
+
+function isSiteProfileReference(value) {
+  return SITE_PROFILE_REF_PATTERN.test(value);
+}
+
+function parseProfileReference(value) {
+  const profileRef = String(value ?? '').trim();
+  if (isLikelyGithubUsername(profileRef)) {
+    return { type: 'github', value: profileRef };
+  }
+  if (isSiteProfileReference(profileRef)) {
+    return { type: 'site', value: profileRef.slice('site:'.length) };
+  }
+  if (profileRef.startsWith('site:')) {
+    return {
+      type: 'invalid',
+      value: profileRef,
+      message: 'site profile reference must be site:<lowercase-source-person-id>',
+    };
+  }
+  if (profileRef.includes(':')) {
+    return {
+      type: 'invalid',
+      value: profileRef,
+      message: 'unknown profile reference prefix',
+    };
+  }
+  return {
+    type: 'invalid-github',
+    value: profileRef,
+    message: 'value does not match GitHub username syntax',
+  };
 }
 
 function normalizeGithubUsername(value) {

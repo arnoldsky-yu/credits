@@ -31,7 +31,7 @@
         },
         {
           "name": "github_username",
-          "note": "GitHub username。可選 people 表中已有 profile 的帳號，也可填尚未建立 profile 的帳號，供後續 GitHub Actions 建立空白 profile template。"
+          "note": "Profile reference。填 GitHub username 表示維護者已審核連到 contributor-owned profile；填 site:<來源人物ID> 表示同一活動網站來源中的顯示用 profile，不是身份合併。"
         },
         {
           "name": "source_url_override",
@@ -59,13 +59,13 @@
       "conditionalFormats": [
         {
           "column": "github_username",
-          "formula": "=AND($G2<>\"\",COUNTIF(INDIRECT(\"people!$A$2:$A\"),$G2)=0)",
+          "formula": "=AND($G2<>\"\",LEFT($G2,5)<>\"site:\",COUNTIF(INDIRECT(\"people!$A$2:$A\"),$G2)=0)",
           "backgroundColor": {
             "red": 1,
             "green": 0.95,
             "blue": 0.8
           },
-          "description": "Highlight GitHub usernames that do not have a profile entry in people yet."
+          "description": "Highlight GitHub usernames that do not have a profile entry in people yet; site profile references are ignored."
         }
       ]
     },
