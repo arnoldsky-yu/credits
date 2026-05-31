@@ -52,7 +52,7 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=$credentials_path" >> "$GITHUB_ENV"
 
       - name: Export canonical Sheet data
-        run: pnpm sheets:export -- --output-dir "$RUNNER_TEMP/sheets-export"
+        run: pnpm sheets:export --output-dir "$RUNNER_TEMP/sheets-export"
 
       - name: Approve or comment on profile PR
         working-directory: tmp/credits-profiles

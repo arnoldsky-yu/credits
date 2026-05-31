@@ -29,9 +29,14 @@ const config = {
 };
 
 test('parseArgs accepts separated and inline option values', () => {
-  assert.deepEqual(parseArgs(['--dry-run', '--config', 'custom.json', '--output-dir=out']), {
+  assert.deepEqual(parseArgs(['--dry-run', '--config', 'custom.json', '--output-dir', 'out']), {
     configPath: 'custom.json',
     dryRun: true,
+    outputDir: 'out',
+  });
+  assert.deepEqual(parseArgs(['--output-dir=out']), {
+    configPath: 'config/sheets.json',
+    dryRun: false,
     outputDir: 'out',
   });
 });
