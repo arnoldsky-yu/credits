@@ -1,12 +1,15 @@
-import { readFile } from 'node:fs/promises';
+import { access, readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { DEFAULT_CONFIG_PATH, getColumnNames, readSheetsConfig } from '../lib/sheets-config.mjs';
 
 const DEFAULT_EXPORT_PATH = 'tmp/sheets-export/export.json';
+const DEFAULT_SITE_PROFILES_DIR = '../credits-profiles/site-profiles';
 const GITHUB_USERNAME_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
 const SITE_PROFILE_REF_PATTERN = /^site:[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 const CLASSIFICATION_LABELS = new Set(['staff', 'speaker', '工作人員', '講者']);
+const SITE_PROFILE_ALLOWED_KEYS = new Set(['display_name', 'avatar_url']);
 
 export async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
@@ -14,7 +17,11 @@ export async function main(argv = process.argv.slice(2)) {
     readSheetsConfig(options.configPath),
     readJson(options.exportPath),
   ]);
-  const issues = validateExportPayload(payload, config);
+  const siteProfiles = await readSiteProfilesIndex(
+    options.siteProfilesDir ?? DEFAULT_SITE_PROFILES_DIR,
+    { required: options.siteProfilesDirSpecified },
+  );
+  const issues = validateExportPayload(payload, config, { siteProfiles });
   printIssues(issues);
 
   const counts = countIssues(issues);
@@ -31,6 +38,8 @@ export function parseArgs(argv) {
   const options = {
     configPath: DEFAULT_CONFIG_PATH,
     exportPath: DEFAULT_EXPORT_PATH,
+    siteProfilesDir: undefined,
+    siteProfilesDirSpecified: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -51,6 +60,17 @@ export function parseArgs(argv) {
     }
     if (arg.startsWith('--export=')) {
       options.exportPath = readInlineArg(arg, '--export');
+      continue;
+    }
+    if (arg === '--site-profiles-dir') {
+      options.siteProfilesDir = readNextArg(argv, index, '--site-profiles-dir');
+      options.siteProfilesDirSpecified = true;
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith('--site-profiles-dir=')) {
+      options.siteProfilesDir = readInlineArg(arg, '--site-profiles-dir');
+      options.siteProfilesDirSpecified = true;
       continue;
     }
     throw new Error(`Unknown argument: ${arg}`);
@@ -79,7 +99,52 @@ async function readJson(filePath) {
   return JSON.parse(await readFile(filePath, 'utf8'));
 }
 
-export function validateExportPayload(payload, config) {
+export async function readSiteProfilesIndex(siteProfilesDir, options = { required: false }) {
+  if (!siteProfilesDir) {
+    return null;
+  }
+
+  try {
+    await access(siteProfilesDir);
+  } catch (error) {
+    if (options.required) {
+      throw new Error(`site profiles directory was not found: ${siteProfilesDir}`);
+    }
+    return null;
+  }
+
+  const profiles = new Map();
+  const entries = await readdir(siteProfilesDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+
+    const eventId = entry.name;
+    const eventDir = path.join(siteProfilesDir, eventId);
+    const profileEntries = await readdir(eventDir, { withFileTypes: true });
+    for (const profileEntry of profileEntries) {
+      if (!profileEntry.isFile() || !profileEntry.name.endsWith('.json')) {
+        continue;
+      }
+
+      const sourcePersonId = path.basename(profileEntry.name, '.json');
+      const filePath = path.join(eventDir, profileEntry.name);
+      let profile;
+      try {
+        profile = JSON.parse(await readFile(filePath, 'utf8'));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        profile = { __siteProfileReadError: `must contain valid JSON: ${message}` };
+      }
+      profiles.set(siteProfileKey(eventId, sourcePersonId), { filePath, profile });
+    }
+  }
+
+  return profiles;
+}
+
+export function validateExportPayload(payload, config, options = {}) {
   const issues = [];
   validatePayloadEnvelope(issues, payload, config);
 
@@ -89,7 +154,7 @@ export function validateExportPayload(payload, config) {
 
   const eventsById = validateEvents(issues, events);
   const peopleByUsername = validatePeople(issues, people);
-  validateAppearances(issues, appearances, eventsById, peopleByUsername);
+  validateAppearances(issues, appearances, eventsById, peopleByUsername, options.siteProfiles ?? null);
   validateUnusedPeople(issues, people, appearances);
 
   return issues;
@@ -222,7 +287,7 @@ function validatePeople(issues, people) {
   return peopleByUsername;
 }
 
-function validateAppearances(issues, appearances, eventsById, peopleByUsername) {
+function validateAppearances(issues, appearances, eventsById, peopleByUsername, siteProfiles) {
   for (const appearance of appearances) {
     requireField(issues, 'appearances', appearance, 'event_id');
     requireField(issues, 'appearances', appearance, 'role_group_zh');
@@ -248,7 +313,7 @@ function validateAppearances(issues, appearances, eventsById, peopleByUsername) 
     if (appearance.github_username) {
       const profileRef = parseProfileReference(appearance.github_username);
       if (profileRef.type === 'site') {
-        // Site profile references are resolved with this row's event_id.
+        validateSiteProfileReference(issues, appearance, profileRef, siteProfiles);
       } else if (profileRef.type === 'invalid') {
         addIssue(
           issues,
@@ -283,6 +348,78 @@ function validateAppearances(issues, appearances, eventsById, peopleByUsername) 
     warnRoleClassificationLabel(issues, appearance, 'role_group_en');
     warnPrivateContact(issues, 'appearances', appearance, 'display_name_at_event');
     warnPrivateContact(issues, 'appearances', appearance, 'notes');
+  }
+}
+
+function validateSiteProfileReference(issues, appearance, profileRef, siteProfiles) {
+  if (!siteProfiles) {
+    return;
+  }
+
+  const eventId = String(appearance.event_id ?? '').trim();
+  const key = siteProfileKey(eventId, profileRef.value);
+  const entry = siteProfiles.get(key);
+  if (!entry) {
+    addIssue(
+      issues,
+      'error',
+      'appearances',
+      rowNumber(appearance),
+      'github_username',
+      `site profile "${profileRef.value}" was not found for event_id "${eventId}"`,
+    );
+    return;
+  }
+
+  validateSiteProfileObject(issues, appearance, profileRef, entry.profile);
+}
+
+function validateSiteProfileObject(issues, appearance, profileRef, profile) {
+  const location = `site profile "${profileRef.value}"`;
+  if (profile?.__siteProfileReadError) {
+    addIssue(issues, 'error', 'appearances', rowNumber(appearance), 'github_username', `${location} ${profile.__siteProfileReadError}`);
+    return;
+  }
+  if (!profile || typeof profile !== 'object' || Array.isArray(profile)) {
+    addIssue(issues, 'error', 'appearances', rowNumber(appearance), 'github_username', `${location} must be a JSON object`);
+    return;
+  }
+
+  for (const key of Object.keys(profile)) {
+    if (!SITE_PROFILE_ALLOWED_KEYS.has(key)) {
+      addIssue(issues, 'error', 'appearances', rowNumber(appearance), 'github_username', `${location} has unsupported field "${key}"`);
+    }
+  }
+
+  validateSiteProfileString(issues, appearance, profileRef, profile, 'display_name', { required: true, allowBlank: false });
+  validateSiteProfileString(issues, appearance, profileRef, profile, 'avatar_url', { required: true, allowBlank: true, url: true });
+}
+
+function validateSiteProfileString(issues, appearance, profileRef, profile, field, options) {
+  const value = profile[field];
+  const location = `site profile "${profileRef.value}" ${field}`;
+  if (value === undefined) {
+    if (options.required) {
+      addIssue(issues, 'error', 'appearances', rowNumber(appearance), 'github_username', `${location} is required`);
+    }
+    return;
+  }
+  if (typeof value !== 'string') {
+    addIssue(issues, 'error', 'appearances', rowNumber(appearance), 'github_username', `${location} must be a string`);
+    return;
+  }
+  if (!options.allowBlank && value.trim() === '') {
+    addIssue(issues, 'error', 'appearances', rowNumber(appearance), 'github_username', `${location} must not be blank`);
+  }
+  if (options.url && value !== '') {
+    try {
+      const url = new URL(value);
+      if (url.protocol !== 'https:') {
+        addIssue(issues, 'error', 'appearances', rowNumber(appearance), 'github_username', `${location} must use https:`);
+      }
+    } catch {
+      addIssue(issues, 'error', 'appearances', rowNumber(appearance), 'github_username', `${location} must be a valid URL`);
+    }
   }
 }
 
@@ -401,6 +538,10 @@ function parseProfileReference(value) {
 
 function normalizeGithubUsername(value) {
   return String(value).toLowerCase();
+}
+
+function siteProfileKey(eventId, sourcePersonId) {
+  return `${eventId}\0${sourcePersonId}`;
 }
 
 function rowNumber(row) {

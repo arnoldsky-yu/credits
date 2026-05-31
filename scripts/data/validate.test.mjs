@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { test } from 'node:test';
 
-import { countIssues, formatIssue, validateExportPayload } from './validate.mjs';
+import { countIssues, formatIssue, readSiteProfilesIndex, validateExportPayload } from './validate.mjs';
 
 const config = {
   spreadsheetId: 'spreadsheet-id',
@@ -98,6 +101,21 @@ function basePayload(overrides = {}) {
   };
 }
 
+async function makeSiteProfilesDir(eventId, sourcePersonId, profile) {
+  const dir = await mkdtemp(path.join(tmpdir(), 'sitcon-site-profiles-'));
+  const eventDir = path.join(dir, eventId);
+  await mkdir(eventDir, { recursive: true });
+  await writeFile(path.join(eventDir, `${sourcePersonId}.json`), `${JSON.stringify(profile, null, 2)}\n`);
+  return dir;
+}
+
+async function readSiteProfiles(eventId = 'SITCON-2026', sourcePersonId = 'speaker-1', profile = {
+  display_name: 'Site Speaker',
+  avatar_url: 'https://example.com/avatar.png',
+}) {
+  return readSiteProfilesIndex(await makeSiteProfilesDir(eventId, sourcePersonId, profile), { required: true });
+}
+
 test('validateExportPayload accepts a minimal valid export', () => {
   const issues = validateExportPayload(basePayload(), config);
 
@@ -115,15 +133,44 @@ test('validateExportPayload treats missing people profile as a warning', () => {
   assert(issues.some((issue) => issue.sheet === 'people' && issue.field === 'github_username'));
 });
 
-test('validateExportPayload accepts site profile references without people warnings', () => {
+test('validateExportPayload accepts site profile references with matching site profile files', async () => {
   const payload = basePayload();
   payload.sheets.appearances.rows[0].github_username = 'site:speaker-1';
+  const siteProfiles = await readSiteProfiles();
 
-  const issues = validateExportPayload(payload, config);
+  const issues = validateExportPayload(payload, config, { siteProfiles });
 
   assert.deepEqual(countIssues(issues), { error: 0, warning: 1 });
   assert(issues.every((issue) => issue.sheet !== 'appearances' || issue.field !== 'github_username'));
   assert(issues.some((issue) => issue.sheet === 'people' && issue.field === 'github_username'));
+});
+
+test('validateExportPayload rejects site profile references without matching files', async () => {
+  const payload = basePayload();
+  payload.sheets.appearances.rows[0].github_username = 'site:speaker-1';
+  const siteProfiles = await readSiteProfiles('SITCON-2026', 'other-speaker');
+
+  const issues = validateExportPayload(payload, config, { siteProfiles });
+
+  assert.equal(countIssues(issues).error, 1);
+  assert(issues.some((issue) => issue.message.includes('was not found for event_id "SITCON-2026"')));
+});
+
+test('validateExportPayload rejects invalid site profile file content', async () => {
+  const payload = basePayload();
+  payload.sheets.appearances.rows[0].github_username = 'site:speaker-1';
+  const siteProfiles = await readSiteProfiles('SITCON-2026', 'speaker-1', {
+    display_name: '',
+    avatar_url: 'http://example.com/avatar.png',
+    bio: 'not allowed',
+  });
+
+  const issues = validateExportPayload(payload, config, { siteProfiles });
+
+  assert.equal(countIssues(issues).error, 3);
+  assert(issues.some((issue) => issue.message.includes('unsupported field "bio"')));
+  assert(issues.some((issue) => issue.message.includes('display_name must not be blank')));
+  assert(issues.some((issue) => issue.message.includes('avatar_url must use https:')));
 });
 
 test('validateExportPayload rejects malformed site profile references', () => {

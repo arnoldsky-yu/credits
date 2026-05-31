@@ -155,7 +155,7 @@ Source URLs should usually live on `events`:
 
 Repository tooling may manage Google Sheets structure, header notes, validation rules, read-only exports, or local data checks from `config/sheets.json` and package scripts. Use `pnpm` for all package-manager operations and package scripts. Do not use npm, yarn, or bun, and do not create or commit `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`, or `bun.lockb`.
 
-LLM agents may run dry-run, local validation, or static syntax-check commands that do not read credentials and do not contact Google APIs, such as `pnpm sheets:init:dry-run`, `pnpm sheets:export:dry-run`, `pnpm data:validate`, or `node --check ...`.
+LLM agents may run dry-run, local validation, or static syntax-check commands that do not read credentials and do not contact Google APIs, such as `pnpm sheets:init:dry-run`, `pnpm sheets:export:dry-run`, `pnpm data:validate`, or `node --check ...`. `pnpm data:validate` may read `../credits-profiles/site-profiles` or an explicitly provided `--site-profiles-dir` path to verify `site:` references; it still must not read secrets or contact Google APIs.
 
 Do not run commands that read `GOOGLE_APPLICATION_CREDENTIALS` or contact Google APIs unless the user explicitly asks for that exact operation and the command can run without exposing secret contents. This includes credentialed commands such as `pnpm sheets:init` and `pnpm sheets:export`, even when the operation is read-only.
 

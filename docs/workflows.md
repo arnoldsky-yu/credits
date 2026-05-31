@@ -41,18 +41,18 @@ flowchart TD
 ```mermaid
 flowchart TD
   maintainer["維護者執行 Export Sheets data"] --> export["credits：pnpm sheets:export"]
-  export --> validate["credits：pnpm data:validate"]
-  validate --> artifact["上傳 sheets-export artifact"]
-  validate --> appToken["建立 SITCON Credits Assistant token"]
+  export --> appToken["建立 SITCON Credits Assistant token"]
   appToken --> checkoutProfiles["checkout sitcon-tw/credits-profiles"]
-  checkoutProfiles --> createTemplates["credits：pnpm profiles:create-missing"]
+  checkoutProfiles --> validate["credits：pnpm data:validate --site-profiles-dir"]
+  validate --> artifact["上傳 sheets-export artifact"]
+  validate --> createTemplates["credits：pnpm profiles:create-missing"]
   createTemplates --> validateProfiles["credits-profiles：pnpm profiles:validate"]
   validateProfiles --> hasChanges{"有建立缺少的 template？"}
   hasChanges -->|是| directCommit["直接 commit 到 credits-profiles master"]
   hasChanges -->|否| noOp["不改動 repo"]
 ```
 
-`Export Sheets data` 是手動觸發、需要憑證的 workflow。它會匯出 canonical Sheet、驗證本機資料、上傳 artifact，並檢查 `people.github_username` 中是否有 `credits-profiles` 尚不存在的 profile 檔案。
+`Export Sheets data` 是手動觸發、需要憑證的 workflow。它會匯出 canonical Sheet、checkout `credits-profiles`、驗證本機資料與 `site:` references、上傳 artifact，並檢查 `people.github_username` 中是否有 `credits-profiles` 尚不存在的 profile 檔案。
 
 若缺少 profile 檔案，workflow 會建立空白 template，驗證 profile 格式，然後由 `SITCON Credits Assistant` GitHub App 直接 commit 到 `credits-profiles` 的 `master`。這不會開 PR，也不會填入簡介、頭像、連結、別名、身份證據或歷史 appearance 連結。`site:` profile reference 不會產生空白 profile template。
 
@@ -60,7 +60,7 @@ flowchart TD
 
 `appearances.github_username` 可以填 `site:<source_person_id>`，表示這筆 appearance 暫時連到同一列 `event_id` 對應的 `credits-profiles/site-profiles/<event_id>/<source_person_id>.json`。site profile 只提供活動網站來源的顯示名稱與頭像，不是 contributor-owned profile，也不代表身份合併。
 
-`site-profiles/` 只由維護者直接 commit，不接受一般 Pull Request 修改，不觸發 `people` helper 同步，也不會被 profile PR auto-review 當成 username。
+`site-profiles/` 只由維護者直接 commit，不接受一般 Pull Request 修改，不觸發 `people` helper 同步，也不會被 profile PR auto-review 當成 username。`data:validate` 在有 site profile checkout 時會檢查 Sheet 中的 `site:` reference 是否存在，並驗證 site profile 只含 `display_name` 與 `avatar_url`。
 
 ## people helper 同步
 
