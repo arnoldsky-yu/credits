@@ -62,6 +62,20 @@ flowchart TD
 
 `site-profiles/` 只由維護者直接 commit，不接受一般 Pull Request 修改，不觸發 `people` helper 同步，也不會被 profile PR auto-review 當成 username。`data:validate` 在有 site profile checkout 時會檢查 Sheet 中的 `site:` reference 是否存在，並驗證 site profile 只含 `display_name` 與 `avatar_url`。
 
+## GitHub Pages 部署
+
+```mermaid
+flowchart TD
+  push["push 到 credits master 或手動觸發"] --> checkout["checkout credits 與 credits-profiles"]
+  checkout --> export["匯出 canonical Google Sheet"]
+  export --> validate["驗證 exported data 與 site-profiles"]
+  validate --> build["建立 dist 靜態網站"]
+  build --> artifact["上傳 Pages artifact"]
+  artifact --> deploy["部署 GitHub Pages"]
+```
+
+`Deploy GitHub Pages` 會在 push 到 `master` 或手動觸發時執行。它需要 `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret 讀取 canonical Sheet，並從 `credits-profiles` 讀取 contributor profile 與 `site-profiles` 顯示資料。workflow 會產生 `dist/`、上傳 Pages artifact，並交給 GitHub Pages 部署；repository 仍需要在 GitHub Pages 設定中使用 GitHub Actions 作為部署來源。
+
 ## people helper 同步
 
 ```mermaid

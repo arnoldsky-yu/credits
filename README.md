@@ -14,7 +14,7 @@ SITCON Credits（SITCON 貢獻紀錄）整理 SITCON 歷年公開的工作人員
 | 新增或更新自己的公開 profile | [credits-profiles](https://github.com/sitcon-tw/credits-profiles) |
 | 查看 canonical Google Sheet | [SITCON Credits Google Sheet](https://docs.google.com/spreadsheets/d/1L2drpIE2ocZF3Stba9X0DnLGmYi_igeGWUhaQB_evsQ/edit?gid=0#gid=0) |
 
-GitHub Pages：TBD
+GitHub Pages：workflow 已定義；實際公開網址依 repository Pages 設定為準。
 
 本地 prototype 可先用已匯出的 Sheets JSON 與 sibling `credits-profiles` checkout 產生：
 
