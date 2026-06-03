@@ -16,6 +16,14 @@ SITCON Credits（SITCON 貢獻紀錄）整理 SITCON 歷年公開的工作人員
 
 GitHub Pages：TBD
 
+本地 prototype 可先用已匯出的 Sheets JSON 與 sibling `credits-profiles` checkout 產生：
+
+```bash
+pnpm site:build -- --export tmp/sheets-export/export.json
+```
+
+這只會建立靜態 `dist/` 產物，不會讀取 Google credentials，也不代表 GitHub Pages 已正式部署。
+
 ## 這個 repo 負責什麼
 
 本 repo 維護 SITCON Credits 的核心資料模型、Google Sheets 工具、資料驗證、匯出流程，以及未來網站建置所需的基礎。它負責的是「歷史貢獻紀錄」：某個公開名稱在某場 SITCON 相關活動中擔任什麼角色，以及這筆資料的來源。
@@ -63,6 +71,7 @@ pnpm sheets:init:dry-run
 pnpm sheets:export:dry-run
 pnpm sheets:sync-people:dry-run
 pnpm profiles:create-missing
+pnpm site:build -- --export tmp/sheets-export/export.json
 ```
 
 更多本地工具、需要憑證的 Google Sheets 操作與 GitHub Actions 設定請看 [維護者指南](docs/maintainer-guide.md)。

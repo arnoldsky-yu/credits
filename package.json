@@ -6,12 +6,13 @@
   "type": "module",
   "scripts": {
     "preinstall": "node scripts/ensure-pnpm.mjs",
-    "test": "node scripts/ensure-pnpm.mjs && node --test scripts/sheets/export.test.mjs scripts/sheets/sync-people.test.mjs scripts/data/validate.test.mjs scripts/profiles/create-missing-templates.test.mjs",
+    "test": "node scripts/ensure-pnpm.mjs && node --test scripts/sheets/export.test.mjs scripts/sheets/sync-people.test.mjs scripts/data/validate.test.mjs scripts/profiles/create-missing-templates.test.mjs scripts/site/build.test.mjs",
     "sheets:export": "node scripts/ensure-pnpm.mjs && node scripts/sheets/export.mjs",
     "sheets:export:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/export.mjs --dry-run",
     "sheets:sync-people": "node scripts/ensure-pnpm.mjs && node scripts/sheets/sync-people.mjs",
     "sheets:sync-people:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/sync-people.mjs --dry-run",
     "profiles:create-missing": "node scripts/ensure-pnpm.mjs && node scripts/profiles/create-missing-templates.mjs",
+    "site:build": "node scripts/ensure-pnpm.mjs && node scripts/site/build.mjs",
     "data:validate": "node scripts/ensure-pnpm.mjs && node scripts/data/validate.mjs",
     "sheets:init": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs",
     "sheets:init:dry-run": "node scripts/ensure-pnpm.mjs && node scripts/sheets/init.mjs --dry-run"
