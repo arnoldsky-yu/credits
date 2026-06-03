@@ -125,11 +125,28 @@
           "note": "供 Google Sheets 操作者辨識用的顯示名稱。profile 正式內容仍以 SITCON Credits Profiles repo 中的個人資料檔案為準。"
         }
       ],
-      "validations": [],
+      "validations": [
+        {
+          "column": "github_username",
+          "type": "CUSTOM_FORMULA",
+          "formula": "=OR($A2=\"\",COUNTIF($A$2:$A,$A2)=1)",
+          "strict": true
+        }
+      ],
       "conditionalFormats": [
         {
           "column": "github_username",
-          "formula": "=AND($A2<>\"\",COUNTIF(INDIRECT(\"appearances!$G$2:$G\"),$A2)=0)",
+          "formula": "=AND($A2<>\"\",COUNTIF($A$2:$A,$A2)>1)",
+          "backgroundColor": {
+            "red": 1,
+            "green": 0.8,
+            "blue": 0.8
+          },
+          "description": "Highlight duplicate GitHub usernames in people."
+        },
+        {
+          "column": "github_username",
+          "formula": "=AND($A2<>\"\",COUNTIF($A$2:$A,$A2)=1,COUNTIF(INDIRECT(\"appearances!$G$2:$G\"),$A2)=0)",
           "backgroundColor": {
             "red": 0.88,
             "green": 0.94,

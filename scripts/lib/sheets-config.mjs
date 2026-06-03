@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 export const DEFAULT_CONFIG_PATH = 'config/sheets.json';
 
-const SUPPORTED_VALIDATION_TYPES = new Set(['ONE_OF_RANGE', 'ONE_OF_LIST']);
+const SUPPORTED_VALIDATION_TYPES = new Set(['ONE_OF_RANGE', 'ONE_OF_LIST', 'CUSTOM_FORMULA']);
 const INVALID_SHEET_TITLE_CHARS = /[\[\]*?/\\]/;
 
 export async function readSheetsConfig(configPath = DEFAULT_CONFIG_PATH) {
@@ -94,6 +94,9 @@ function validateDataValidationConfig(sheetTitle, seenColumns, validation) {
     if (!Array.isArray(values) || values.length === 0 || values.some((value) => !isNonEmptyString(value))) {
       throw new Error(`Sheet ${sheetTitle} validation on ${validation.column} needs non-empty values.`);
     }
+  }
+  if (validation.type === 'CUSTOM_FORMULA' && !isNonEmptyString(validation.formula)) {
+    throw new Error(`Sheet ${sheetTitle} validation on ${validation.column} needs a formula.`);
   }
 }
 

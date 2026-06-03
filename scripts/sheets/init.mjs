@@ -98,6 +98,8 @@ function printPlan(config) {
     for (const validation of sheet.validations ?? []) {
       const target = validation.type === 'ONE_OF_RANGE'
         ? validation.range
+        : validation.type === 'CUSTOM_FORMULA'
+          ? validation.formula
         : (validation.values ?? []).join(', ');
       console.log(`  validation ${validation.column}: ${validation.type} ${target} strict=${validation.strict ?? true}`);
     }
@@ -298,6 +300,17 @@ function buildValidationRule(validation) {
       condition: {
         type: 'ONE_OF_LIST',
         values: (validation.values ?? []).map((value) => ({ userEnteredValue: value })),
+      },
+      strict: validation.strict ?? true,
+      showCustomUi: true,
+    };
+  }
+
+  if (validation.type === 'CUSTOM_FORMULA') {
+    return {
+      condition: {
+        type: 'CUSTOM_FORMULA',
+        values: [{ userEnteredValue: validation.formula }],
       },
       strict: validation.strict ?? true,
       showCustomUi: true,
