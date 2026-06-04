@@ -1,11 +1,23 @@
+import {
+  claimSearch,
+  claimShareUrl,
+  claimTokensFromSearch,
+  isClaimMode,
+  isClaimUrlTooLong,
+  profileRequestIssueUrl,
+} from './claim.js';
+
 const state = {
   data: null,
   people: [],
   view: 'grid',
-  sort: 'daily',
+  sort: isClaimMode(window.location.search) ? 'canonical' : 'daily',
   shuffleSeed: '',
   currentPersonKey: '',
   syncingDialogFromUrl: false,
+  claimMode: isClaimMode(window.location.search),
+  selectedClaimTokens: new Set(),
+  claimPinnedTokens: new Set(),
   filters: {
     query: '',
     year: '',
@@ -15,6 +27,9 @@ const state = {
 };
 
 const elements = {
+  pageTitle: document.querySelector('#pageTitle'),
+  pageLede: document.querySelector('#pageLede'),
+  claimEntryLink: document.querySelector('#claimEntryLink'),
   searchInput: document.querySelector('#searchInput'),
   yearFilter: document.querySelector('#yearFilter'),
   seriesFilter: document.querySelector('#seriesFilter'),
@@ -25,6 +40,13 @@ const elements = {
   peopleList: document.querySelector('#peopleList'),
   personDialog: document.querySelector('#personDialog'),
   personDetail: document.querySelector('#personDetail'),
+  claimPanel: document.querySelector('#claimPanel'),
+  claimIssueButton: document.querySelector('#claimIssueButton'),
+  claimCopyLinkButton: document.querySelector('#claimCopyLinkButton'),
+  claimClearButton: document.querySelector('#claimClearButton'),
+  claimCount: document.querySelector('#claimCount'),
+  claimSelection: document.querySelector('#claimSelection'),
+  claimNotice: document.querySelector('#claimNotice'),
   avatarTemplate: document.querySelector('#avatarTemplate'),
   viewButtons: document.querySelectorAll('[data-view]'),
   sortButtons: document.querySelectorAll('[data-sort]'),
@@ -62,12 +84,16 @@ async function init() {
   state.data = await response.json();
   state.people = state.data.people;
   state.shuffleSeed = `session:${Date.now()}:${Math.random()}`;
+  const initialClaimTokens = validClaimTokens(claimTokensFromSearch(window.location.search));
+  state.selectedClaimTokens = new Set(initialClaimTokens);
+  state.claimPinnedTokens = new Set(initialClaimTokens);
 
   fillStats();
   fillFilters();
   bindEvents();
+  syncSortButtons();
   render();
-  syncDialogFromUrl();
+  syncStateFromUrl();
 }
 
 function fillStats() {
@@ -128,12 +154,28 @@ function bindEvents() {
       } else {
         state.sort = button.dataset.sort;
       }
-      for (const current of elements.sortButtons) {
-        current.classList.toggle('is-active', current.dataset.sort === state.sort);
-      }
+      syncSortButtons();
       render();
     });
   }
+  elements.claimIssueButton.addEventListener('click', () => {
+    const claimUrl = currentClaimUrl();
+    if (isClaimUrlTooLong(claimUrl)) {
+      showClaimNotice('標記網址較長，請先減少標記項目後再開啟表單。');
+      return;
+    }
+    window.open(profileRequestIssueUrl(claimUrl), '_blank', 'noopener');
+  });
+  elements.claimCopyLinkButton.addEventListener('click', () => {
+    copyText(currentClaimUrl())
+      .then(() => showClaimNotice('已複製分享網址。'))
+      .catch(() => showClaimNotice('無法自動複製，請手動複製瀏覽器網址。'));
+  });
+  elements.claimClearButton.addEventListener('click', () => {
+    state.selectedClaimTokens.clear();
+    writeClaimSearch();
+    render();
+  });
   elements.personDialog.querySelector('.close-button').addEventListener('click', () => {
     elements.personDialog.close();
   });
@@ -150,8 +192,8 @@ function bindEvents() {
     }
     clearProfileHash();
   });
-  window.addEventListener('hashchange', syncDialogFromUrl);
-  window.addEventListener('popstate', syncDialogFromUrl);
+  window.addEventListener('hashchange', syncStateFromUrl);
+  window.addEventListener('popstate', syncStateFromUrl);
 }
 
 function render() {
@@ -165,6 +207,7 @@ function render() {
   } else {
     renderList(people);
   }
+  updateClaimPanel();
 }
 
 function filteredPeople() {
@@ -190,12 +233,20 @@ function filteredPeople() {
 
 function sortedPeople(people) {
   const sorted = [...people];
-  if (state.sort === 'canonical') {
-    return sorted.sort(canonicalPeopleSorter);
+  const baseSorter =
+    state.sort === 'canonical'
+      ? canonicalPeopleSorter
+      : (a, b) => {
+          const seed = state.sort === 'shuffle' ? state.shuffleSeed : dailySeed();
+          return seededScore(a.key, seed) - seededScore(b.key, seed) || canonicalPeopleSorter(a, b);
+        };
+
+  if (!state.claimMode || state.selectedClaimTokens.size === 0) {
+    return sorted.sort(baseSorter);
   }
 
-  const seed = state.sort === 'shuffle' ? state.shuffleSeed : dailySeed();
-  return sorted.sort((a, b) => seededScore(a.key, seed) - seededScore(b.key, seed) || canonicalPeopleSorter(a, b));
+  const claimRanks = new Map([...state.claimPinnedTokens].map((token, index) => [token, index]));
+  return sorted.sort((a, b) => claimRankFor(a, claimRanks) - claimRankFor(b, claimRanks) || baseSorter(a, b));
 }
 
 function canonicalPeopleSorter(a, b) {
@@ -203,6 +254,12 @@ function canonicalPeopleSorter(a, b) {
     (a.canonicalOrder ?? Number.MAX_SAFE_INTEGER) - (b.canonicalOrder ?? Number.MAX_SAFE_INTEGER) ||
     a.displayName.localeCompare(b.displayName, 'zh-Hant')
   );
+}
+
+function claimRankFor(person, claimRanks) {
+  return state.selectedClaimTokens.has(person.claimToken) && claimRanks.has(person.claimToken)
+    ? claimRanks.get(person.claimToken)
+    : Number.MAX_SAFE_INTEGER;
 }
 
 function renderGrid(people) {
@@ -218,7 +275,9 @@ function renderGrid(people) {
     card.querySelector('.avatar').replaceChildren(renderAvatar(person));
     card.querySelector('.person-name').textContent = person.displayName;
     card.querySelector('.person-note').textContent = cardSummary(person);
+    decorateClaimableElement(card, person);
     card.addEventListener('click', () => openPerson(person.key));
+    bindKeyboardActivation(card, () => openPerson(person.key));
     fragment.append(card);
   }
   elements.peopleGrid.append(fragment);
@@ -233,9 +292,10 @@ function renderList(people) {
 
   const fragment = document.createDocumentFragment();
   for (const person of people) {
-    const row = document.createElement('button');
-    row.type = 'button';
+    const row = document.createElement('article');
     row.className = 'list-row';
+    row.tabIndex = 0;
+    row.setAttribute('role', 'button');
     row.innerHTML = `
       <span class="avatar"></span>
       <span class="list-main">
@@ -246,10 +306,77 @@ function renderList(people) {
       <span class="list-roles">${renderRoleChips(person)}</span>
     `;
     row.querySelector('.avatar').replaceChildren(renderAvatar(person));
+    decorateClaimableElement(row, person);
     row.addEventListener('click', () => openPerson(person.key));
+    bindKeyboardActivation(row, () => openPerson(person.key));
     fragment.append(row);
   }
   elements.peopleList.append(fragment);
+}
+
+function bindKeyboardActivation(element, callback) {
+  element.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+    event.preventDefault();
+    callback();
+  });
+}
+
+function decorateClaimableElement(element, person) {
+  const selected = person.claimable && state.selectedClaimTokens.has(person.claimToken);
+  element.classList.toggle('is-claim-mode', state.claimMode);
+  element.classList.toggle('is-claimed', selected);
+  element.classList.toggle('is-unclaimable', state.claimMode && !person.claimable);
+
+  if (!state.claimMode) {
+    element.removeAttribute('aria-pressed');
+    element.title = '查看貢獻紀錄';
+    return;
+  }
+
+  element.setAttribute('aria-pressed', person.claimable ? String(selected) : 'false');
+  element.title = person.claimable ? '查看貢獻紀錄' : '這個項目目前沒有穩定的 profile reference，暫時不能標記';
+  element.append(renderClaimToggle(person, selected));
+}
+
+function renderClaimToggle(person, selected) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'claim-toggle';
+  button.disabled = !person.claimable;
+  button.textContent = selected ? '已標記' : '標記';
+  button.setAttribute('aria-pressed', person.claimable ? String(selected) : 'false');
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleClaim(person);
+  });
+  return button;
+}
+
+function toggleClaim(person) {
+  if (!person.claimable || !person.claimToken) {
+    showClaimNotice('這個項目目前沒有穩定的 profile reference，暫時不能標記。');
+    return;
+  }
+  if (state.selectedClaimTokens.has(person.claimToken)) {
+    state.selectedClaimTokens.delete(person.claimToken);
+  } else {
+    state.selectedClaimTokens.add(person.claimToken);
+  }
+  preserveViewportScroll(() => {
+    writeClaimSearch();
+    render();
+  });
+}
+
+function preserveViewportScroll(callback) {
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  callback();
+  window.scrollTo(scrollX, scrollY);
+  window.requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
 }
 
 function openPerson(personKey) {
@@ -291,7 +418,11 @@ function showPerson(personKey) {
   return true;
 }
 
-function syncDialogFromUrl() {
+function syncStateFromUrl() {
+  state.claimMode = isClaimMode(window.location.search);
+  const urlClaimTokens = validClaimTokens(claimTokensFromSearch(window.location.search));
+  state.selectedClaimTokens = new Set(urlClaimTokens);
+  state.claimPinnedTokens = new Set(urlClaimTokens);
   const personKey = profileKeyFromHash();
   state.syncingDialogFromUrl = true;
   try {
@@ -299,12 +430,13 @@ function syncDialogFromUrl() {
       if (elements.personDialog.open) {
         elements.personDialog.close();
       }
-      return;
+    } else {
+      showPerson(personKey);
     }
-    showPerson(personKey);
   } finally {
     state.syncingDialogFromUrl = false;
   }
+  render();
 }
 
 function profileKeyFromHash() {
@@ -328,7 +460,9 @@ function profileKeyFromHash() {
 
 function pushProfileHash(personKey) {
   const hashValue = profileHashValue(personKey);
-  const nextHash = `person=${encodeURIComponent(hashValue)}`;
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  params.set('person', hashValue);
+  const nextHash = params.toString();
   if (window.location.hash.slice(1) === nextHash) {
     return;
   }
@@ -336,7 +470,10 @@ function pushProfileHash(personKey) {
 }
 
 function clearProfileHash() {
-  window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  params.delete('person');
+  const nextHash = params.toString();
+  window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${nextHash ? `#${nextHash}` : ''}`);
 }
 
 function personForKey(personKey) {
@@ -349,6 +486,98 @@ function profileHashValue(personKey) {
     return person.username;
   }
   return personKey;
+}
+
+function writeClaimSearch() {
+  const nextSearch = claimSearch(state.selectedClaimTokens, window.location.search);
+  window.history.replaceState(null, '', `${window.location.pathname}${nextSearch}${window.location.hash}`);
+}
+
+function validClaimTokens(tokens) {
+  const valid = new Set(state.people.filter((person) => person.claimable).map((person) => person.claimToken));
+  return tokens.filter((token) => valid.has(token));
+}
+
+function updateClaimPanel() {
+  syncPageMode();
+  elements.claimPanel.hidden = !state.claimMode;
+  if (!state.claimMode) {
+    return;
+  }
+
+  const count = state.selectedClaimTokens.size;
+  const hasClaims = count > 0;
+  elements.claimCount.textContent = formatNumber(count);
+  elements.claimIssueButton.disabled = !hasClaims;
+  elements.claimCopyLinkButton.disabled = !hasClaims;
+  elements.claimClearButton.disabled = !hasClaims;
+  elements.claimIssueButton.classList.toggle('is-ready', hasClaims);
+  renderClaimSelection();
+}
+
+function syncPageMode() {
+  elements.claimEntryLink.hidden = state.claimMode;
+  elements.claimEntryLink.href = claimShareUrl(window.location, []);
+
+  if (state.claimMode) {
+    document.title = '標記我的貢獻紀錄 - SITCON Credits';
+    elements.pageTitle.textContent = '標記我的貢獻紀錄';
+    elements.pageLede.textContent =
+      '合併紀錄或更新個人公開資料，完成後開啟表單填寫資料';
+    return;
+  }
+
+  document.title = 'SITCON Credits';
+  elements.pageTitle.textContent = '貢獻紀錄索引';
+  elements.pageLede.textContent = '探索歷屆工作人員、講者與公開貢獻紀錄。';
+}
+
+function syncSortButtons() {
+  for (const current of elements.sortButtons) {
+    current.classList.toggle('is-active', current.dataset.sort === state.sort);
+  }
+}
+
+function renderClaimSelection() {
+  elements.claimSelection.replaceChildren();
+  if (state.selectedClaimTokens.size === 0) {
+    elements.claimSelection.textContent = '尚未標記任何項目。';
+    return;
+  }
+
+  const peopleByToken = new Map(state.people.map((person) => [person.claimToken, person]));
+  const fragment = document.createDocumentFragment();
+  for (const token of state.selectedClaimTokens) {
+    const person = peopleByToken.get(token);
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'claim-selection-item';
+    item.textContent = person ? person.displayName : token;
+    item.title = person ? `${person.displayName} - ${person.summary || cardSummary(person)}` : token;
+    item.addEventListener('click', () => {
+      if (person) {
+        openPerson(person.key);
+      }
+    });
+    fragment.append(item);
+  }
+  elements.claimSelection.append(fragment);
+}
+
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  throw new Error('clipboard API is unavailable');
+}
+
+function showClaimNotice(message) {
+  elements.claimNotice.textContent = message;
+}
+
+function currentClaimUrl() {
+  return new URL(claimShareUrl(window.location, state.selectedClaimTokens), window.location.href).toString();
 }
 
 function renderLinks(person) {

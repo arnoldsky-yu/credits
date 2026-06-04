@@ -121,6 +121,8 @@ test('buildSiteData aggregates all appearances into people by profile reference'
 
   const alice = data.people.find((person) => person.key === 'github:alice');
   assert.equal(alice.displayName, 'Alice Profile');
+  assert.equal(alice.claimable, true);
+  assert.equal(alice.claimToken, 'Alice');
   assert.equal(alice.appearanceCount, 2);
   assert.equal(alice.eventCount, 2);
   assert.equal(alice.primaryEventName, 'Event B');
@@ -131,6 +133,8 @@ test('buildSiteData aggregates all appearances into people by profile reference'
 
   const sitePerson = data.people.find((person) => person.key === 'site:EVENT-B/source-1');
   assert.equal(sitePerson.displayName, 'Site Profile');
+  assert.equal(sitePerson.claimable, true);
+  assert.equal(sitePerson.claimToken, 'EVENT-B/site:source-1');
   assert.equal(sitePerson.appearanceCount, 1);
   assert.equal(sitePerson.eventCount, 1);
   assert.equal(sitePerson.primaryEventName, 'Event B');
@@ -138,6 +142,8 @@ test('buildSiteData aggregates all appearances into people by profile reference'
 
   const fallback = data.people.find((person) => person.key === 'appearance:EVENT-B/3');
   assert.equal(fallback.displayName, 'Fallback Person');
+  assert.equal(fallback.claimable, false);
+  assert.equal(fallback.claimToken, '');
   assert.equal(fallback.primaryEventName, 'Event B');
 
   assert.deepEqual(data.appearances.map((appearance) => appearance.eventId), [

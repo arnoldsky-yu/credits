@@ -21,6 +21,7 @@ export async function main(argv = process.argv.slice(2)) {
   await cp(path.join(options.siteDir, 'index.html'), path.join(options.outputDir, 'index.html'));
   await cp(path.join(options.siteDir, 'styles.css'), path.join(options.outputDir, 'assets', 'styles.css'));
   await cp(path.join(options.siteDir, 'app.js'), path.join(options.outputDir, 'assets', 'app.js'));
+  await cp(path.join(options.siteDir, 'claim.js'), path.join(options.outputDir, 'assets', 'claim.js'));
   await writeFile(path.join(options.outputDir, 'assets', 'site-data.json'), `${JSON.stringify(siteData, null, 2)}\n`);
 
   console.log(
@@ -195,6 +196,7 @@ export function buildSiteData(payload, profileData) {
     const appearance = {
       id: `${row.event_id}:${index}`,
       personKey,
+      claimToken: claimTokenFor(row, profileKind, profileRef),
       eventId: row.event_id,
       eventName: event.name,
       eventSeries: event.series,
@@ -312,6 +314,16 @@ function personKeyFor(row, profileKind, index, profileRef = cleanText(row.github
   return `appearance:${row.event_id}/${index}`;
 }
 
+function claimTokenFor(row, profileKind, profileRef) {
+  if (profileKind === 'github') {
+    return profileRef;
+  }
+  if (profileKind === 'site') {
+    return `${row.event_id}/${profileRef}`;
+  }
+  return '';
+}
+
 function createPerson(row, profileKind, { profiles, siteProfiles }, helperPeople, event, personKey, profileRef) {
   const sourcePersonId = profileKind === 'site' ? profileRef.slice('site:'.length) : '';
   const contributor = profileKind === 'github' ? profiles.get(profileRef.toLowerCase()) : null;
@@ -365,6 +377,8 @@ function finalizePerson(person, eventsById) {
   return {
     ...person,
     canonicalOrder: person.sortOrder,
+    claimToken: claimTokenForPerson(person),
+    claimable: person.profileKind === 'github' || person.profileKind === 'site',
     eventYears,
     eventIds,
     eventCount,
@@ -375,6 +389,16 @@ function finalizePerson(person, eventsById) {
     summary: summaryParts.join(' / '),
     searchText: person.searchText.filter(Boolean).join(' ').toLowerCase(),
   };
+}
+
+function claimTokenForPerson(person) {
+  if (person.profileKind === 'github') {
+    return person.username || person.profileRef;
+  }
+  if (person.profileKind === 'site') {
+    return `${person.eventIds.values().next().value}/${person.profileRef}`;
+  }
+  return '';
 }
 
 function uniqueSorted(values, sorter = (a, b) => String(a).localeCompare(String(b), 'zh-Hant')) {

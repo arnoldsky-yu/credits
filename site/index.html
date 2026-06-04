@@ -10,7 +10,7 @@
     <!-- End Google Tag Manager -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SITCON Credits Prototype</title>
+    <title>SITCON Credits</title>
     <link rel="stylesheet" href="./assets/styles.css">
   </head>
   <body>
@@ -21,21 +21,24 @@
     <header class="site-header">
       <div class="header-copy">
         <p class="eyebrow">SITCON Credits</p>
-        <h1>貢獻紀錄索引</h1>
-        <p class="lede">探索歷屆工作人員、講者與公開貢獻紀錄。</p>
+        <h1 id="pageTitle">貢獻紀錄索引</h1>
+        <p id="pageLede" class="lede">探索歷屆工作人員、講者與公開貢獻紀錄。</p>
       </div>
-      <div class="stats" aria-label="資料統計">
-        <div>
-          <strong data-stat="people">-</strong>
-          <span>People</span>
-        </div>
-        <div>
-          <strong data-stat="appearances">-</strong>
-          <span>貢獻紀錄</span>
-        </div>
-        <div>
-          <strong data-stat="events">-</strong>
-          <span>活動</span>
+      <div class="header-side">
+        <a id="claimEntryLink" class="claim-entry-link" href="./?claim=1">有重複的你？或是要更新資料？這邊請</a>
+        <div class="stats" aria-label="資料統計">
+          <div>
+            <strong data-stat="people">-</strong>
+            <span>People</span>
+          </div>
+          <div>
+            <strong data-stat="appearances">-</strong>
+            <span>貢獻紀錄</span>
+          </div>
+          <div>
+            <strong data-stat="events">-</strong>
+            <span>活動</span>
+          </div>
         </div>
       </div>
     </header>
@@ -80,6 +83,21 @@
         <p id="sourceMeta">載入資料中</p>
       </section>
 
+      <section id="claimPanel" class="claim-panel" aria-label="標記我的貢獻紀錄" hidden>
+        <div>
+          <h2>先標記，再送出表單</h2>
+          <p>搜尋或篩選你曾參與的活動，找到自己的紀錄按下「標記」，完成後開啟表單填寫公開資料；手動發 PR 者請複製分享網址</p>
+        </div>
+        <div class="claim-actions">
+          <button id="claimClearButton" type="button" disabled>清除</button>
+          <button id="claimCopyLinkButton" type="button" disabled>複製分享網址</button>
+          <button id="claimIssueButton" class="claim-next-action" type="button" disabled>開啟表單</button>
+        </div>
+        <p class="claim-status"><strong id="claimCount">0</strong> 個已標記項目</p>
+        <div id="claimSelection" class="claim-selection" aria-label="已標記項目"></div>
+        <p id="claimNotice" class="claim-notice" aria-live="polite"></p>
+      </section>
+
       <section id="peopleGrid" class="people-grid" aria-label="貢獻者頭像牆"></section>
       <section id="peopleList" class="people-list" aria-label="貢獻者列表" hidden></section>
     </main>
@@ -92,11 +110,11 @@
     </dialog>
 
     <template id="avatarTemplate">
-      <button class="person-card" type="button">
+      <article class="person-card" role="button" tabindex="0">
         <span class="avatar" aria-hidden="true"></span>
         <span class="person-name"></span>
         <span class="person-note"></span>
-      </button>
+      </article>
     </template>
 
     <script type="module" src="./assets/app.js"></script>
