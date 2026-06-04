@@ -2,7 +2,9 @@
 
 SITCON Credits（SITCON 貢獻紀錄）整理 SITCON 歷年公開的工作人員與講者貢獻紀錄，讓社群可以更容易回顧某場活動、某個角色或某位夥伴曾經參與的公開紀錄。
 
-多年來，SITCON 相關活動的工作人員與講者資訊分散在歷屆官網、活動頁、議程頁與其他公開頁面。這個專案希望把那些公開紀錄整理成可長期維護、可追溯來源、未來可部署到 GitHub Pages 的索引，同時讓曾經參與的夥伴可以 opt-in 補充自己的公開簡介、頭像與連結。
+多年來，SITCON 相關活動的工作人員與講者資訊分散在歷屆官網、活動頁、議程頁與其他公開頁面。這個專案把那些公開紀錄整理成可長期維護、可追溯來源、可由 GitHub Pages 呈現的索引，同時讓曾經參與的夥伴可以 opt-in 補充自己的公開簡介、頭像與連結。
+
+這裡記錄的是公開活動脈絡中的貢獻，而不是排行榜、會員名冊或身份資料庫。若某筆歷史紀錄要連到某個 GitHub profile，仍需要維護者根據 canonical Google Sheet 審核；個人 profile PR、標記網址或相似名稱都只是審核線索。
 
 ## 快速入口
 
@@ -17,19 +19,19 @@ SITCON Credits（SITCON 貢獻紀錄）整理 SITCON 歷年公開的工作人員
 
 GitHub Pages：https://sitcon.org/credits/
 
-本地 prototype 可先用已匯出的 Sheets JSON 與 sibling `credits-profiles` checkout 產生：
+本地預覽可先用已匯出的 Sheets JSON 與 sibling `credits-profiles` checkout 產生：
 
 ```bash
 pnpm site:build -- --export tmp/sheets-export/export.json
 ```
 
-這只會建立靜態 `dist/` 產物，不會讀取 Google credentials，也不代表 GitHub Pages 已正式部署。
+這只會建立本機靜態 `dist/` 產物，不會讀取 Google credentials，也不會部署 GitHub Pages。
 
 Pages 網頁預設是公開貢獻紀錄查詢介面，不顯示標記工具。過去參與 SITCON 相關活動的夥伴若要請維護者確認哪些項目可能是在記錄自己，可以打開 [標記我的貢獻紀錄](http://sitcon.org/credits/?claim=1)，選取項目後分享該頁網址。這個流程只收集本人意願與審核線索，不會自動修改 canonical Sheet，也不會自動完成身份連結。
 
 ## 這個 repo 負責什麼
 
-本 repo 維護 SITCON Credits 的核心資料模型、Google Sheets 工具、資料驗證、匯出流程，以及未來網站建置所需的基礎。它負責的是「歷史貢獻紀錄」：某個公開名稱在某場 SITCON 相關活動中擔任什麼角色，以及這筆資料的來源。
+本 repo 維護 SITCON Credits 的核心資料模型、Google Sheets 工具、資料驗證、匯出流程，以及 GitHub Pages 靜態網站建置。它負責的是「歷史貢獻紀錄」：某個公開名稱在某場 SITCON 相關活動中擔任什麼角色，以及這筆資料的來源。
 
 個人公開簡介放在獨立的 [`sitcon-tw/credits-profiles`](https://github.com/sitcon-tw/credits-profiles) repo。那裡的 `profiles/` 存放本人 opt-in 提供的 profile 資料，例如偏好的顯示名稱、簡介、頭像、公開 email 與公開連結；`site-profiles/` 存放維護者從歷屆活動公開網站整理出的顯示用名稱與頭像。
 
@@ -39,16 +41,17 @@ Pages 網頁預設是公開貢獻紀錄查詢介面，不顯示標記工具。�
 - 個人 profile 由 contributor 透過 GitHub Pull Request 自助新增或更新。
 - `appearances.github_username` 可以填裸 GitHub username 連到已審核 profile，也可以填 `site:<source_person_id>` 連到同一活動網站來源中的顯示用 profile；裸 username 連結仍是維護者審核後的資料判斷，不是 profile PR 自動完成的身份合併。
 
-## 目前狀態
+## 專案狀態
 
-本 repo 目前已有：
+本 repo 已有：
 
 - 不讀取 credentials 的 `CI` workflow，用來執行測試與 Google Sheets dry-run 檢查。
 - 手動觸發的 `Export Sheets data` workflow，用 repository secret 匯出 canonical Google Sheet、驗證資料，並用 `SITCON Credits Assistant` GitHub App 直接 commit 缺少的空白 profile template 到 `credits-profiles`。
 - `Sync people helper` workflow，可由 `credits-profiles` dispatch，將 profile repo 中的 username 與 display name 同步到 Google Sheets 的 `people` helper sheet。
 - `Review profile PR` workflow，可由 `credits-profiles` dispatch，根據 canonical `appearances.github_username` 核准、合併或留言處理符合條件的自助 profile PR。
+- `Deploy GitHub Pages` workflow，從 canonical Sheet 與 `credits-profiles` 建置並部署公開索引頁。
 
-這些 workflow 定義已在 repo 內；實際執行仍需要 repository secrets、variables、Google Workspace 權限、`SITCON Credits Assistant` GitHub App 安裝與 branch ruleset 配合。GitHub Pages 建置部署仍是後續工作，在對應 workflow 與 repository 設定完成前不應描述為已上線。
+GitHub Pages 使用 GitHub Actions workflow 部署。其他需要跨 repo 寫入、留言、審查或合併的 automation，仍取決於 repository secrets、variables、Google Workspace 權限、`SITCON Credits Assistant` GitHub App 安裝與 branch ruleset。不要只因 workflow 檔案存在，就推定所有外部設定已完成。
 
 ## 如何參與
 
@@ -59,7 +62,7 @@ Pages 網頁預設是公開貢獻紀錄查詢介面，不顯示標記工具。�
 - 在 `credits-profiles` 提出自己的個人簡介、公開連結或顯示名稱更新。
 - 到 Pages 網頁標記可能是自己的貢獻紀錄，並把分享網址交給維護者確認。
 - 協助整理 Google Sheets 欄位與維護流程。
-- 協助設計未來 GitHub Pages 前端查詢體驗。
+- 協助改善 GitHub Pages 前端查詢與標記體驗。
 
 請避免大量自動匯入或自動合併身份。這個專案的長期價值來自可信任、可維護、可追溯的紀錄，而不是一次性塞滿資料。
 

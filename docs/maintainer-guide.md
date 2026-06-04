@@ -50,7 +50,7 @@ LLM agents 不應讀取 service account credentials，也不應在沒有明確�
 
 ## GitHub Actions
 
-目前已定義的 workflow：
+已定義的 workflow：
 
 | Workflow | 觸發方式 | 職責 |
 | --- | --- | --- |
@@ -58,8 +58,9 @@ LLM agents 不應讀取 service account credentials，也不應在沒有明確�
 | `Export Sheets data` | 手動觸發 | 匯出 canonical Google Sheet、checkout `credits-profiles`、執行含 site profile 檢查的 `pnpm data:validate`、上傳 artifact，並直接 commit 缺少的空白 profile template 到 `credits-profiles`。 |
 | `Sync people helper` | `credits-profiles` repository dispatch、手動觸發 | 將 `credits-profiles` 的 profile username 與 display name 同步到 Google Sheets 的 `people` helper sheet。 |
 | `Review profile PR` | `credits-profiles` repository dispatch | 匯出 canonical Google Sheet，確認 profile PR 的 username 是否已出現在 `appearances.github_username`，符合條件時核准並 squash merge，不符合時留言提醒維護者。 |
+| `Deploy GitHub Pages` | `master` push、手動觸發 | 匯出 canonical Google Sheet、checkout `credits-profiles`、驗證資料與 site profile references、建立 `dist/`，並部署到 GitHub Pages。 |
 
-`CI` 不讀取 service account credentials、不連線 Google APIs，也不匯出 canonical Sheet。`Export Sheets data`、`Sync people helper` 和 `Review profile PR` 需要維護者先在 GitHub repository secrets 設定 `GOOGLE_SERVICE_ACCOUNT_JSON`。
+`CI` 不讀取 service account credentials、不連線 Google APIs，也不匯出 canonical Sheet。`Export Sheets data`、`Sync people helper`、`Review profile PR` 和 `Deploy GitHub Pages` 需要維護者先在 GitHub repository secrets 設定 `GOOGLE_SERVICE_ACCOUNT_JSON`。
 
 跨 repo 寫入、留言、核准或合併 `credits-profiles` 另需安裝 `SITCON Credits Assistant` GitHub App，並設定：
 
@@ -78,6 +79,8 @@ LLM agents 不應讀取 service account credentials，也不應在沒有明確�
 
 `Export Sheets data` workflow 會先 checkout `credits-profiles`，再以 `tmp/credits-profiles/site-profiles` 驗證 canonical Sheet 中的 `site:` references。這是 credentialed export path 的強制檢查；如果 Sheet 填了不存在或格式錯誤的 site profile reference，workflow 會在建立 profile template 前失敗。
 
-## 仍未啟用的部分
+## 部署與外部設定
 
-GitHub Pages 建置部署仍是後續工作；在對應 workflow 與 repository 設定完成前，不應描述為已上線。若未來新增 Forms、Pages build、public search index 或資料 schema，請先更新 [資料模型與治理](data-model.md) 和 [自動化流程](workflows.md)。
+GitHub Pages 使用 GitHub Actions 作為部署來源；`Deploy GitHub Pages` workflow 會負責匯出 canonical Sheet、驗證資料、建立靜態網站並部署。若 Pages 設定、domain、repository secret 或 Google Workspace 權限異動，請同時檢查 `.github/workflows/pages.yml` 與 [自動化流程](workflows.md) 的描述。
+
+workflow 檔案存在不等於外部設定都已生效。文件若提到跨 repo commit、profile PR 自動審查、Google Sheets 寫入、branch ruleset 或 GitHub App 權限，應明確區分「repo 內已有 workflow」與「GitHub / Google Workspace 設定已確認」。若未來新增 Forms、public search index、資料 schema 或新的跨 repo 自動化，請先更新 [資料模型與治理](data-model.md) 和 [自動化流程](workflows.md)。

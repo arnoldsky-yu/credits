@@ -39,7 +39,7 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 
 ## Google Sheets
 
-目前維護三張工作表：
+維護三張工作表：
 
 - `appearances`：每列代表一個人在一場活動中的一筆公開貢獻紀錄。
 - `events`：活動清單與活動層級來源 URL。
@@ -98,7 +98,7 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 
 本人提出 profile PR，或透過 Pages 網頁標記哪些公開紀錄可能是在記錄自己，是建立關聯意願與審核線索，不是自動身份合併。若不確定是否為同一人，應先保持紀錄分開。
 
-若某筆 appearance 目前使用 `site:<source_person_id>`，本人日後提出 `profiles/<github_username>.json` PR 時，維護者應人工確認後才把 Sheet 中的 profile reference 改成裸 GitHub username。不要把 `site:` reference 自動轉成 username。
+若某筆 appearance 使用 `site:<source_person_id>`，本人日後提出 `profiles/<github_username>.json` PR 時，維護者應人工確認後才把 Sheet 中的 profile reference 改成裸 GitHub username。不要把 `site:` reference 自動轉成 username。
 
 ## 隱私與更正
 

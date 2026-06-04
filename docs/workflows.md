@@ -2,7 +2,7 @@
 
 這份文件給維護者、對專案自動化有興趣的貢獻者，以及需要理解兩個 repo 如何互相觸發的人閱讀。`credits` 負責 canonical Google Sheets 與需要 secrets 的動作；`credits-profiles` 負責 profile PR 的低風險自助檢查。
 
-目前 repo 內已有完整 workflow 定義；實際執行仍需要 repository secrets、variables、Google Workspace 權限、`SITCON Credits Assistant` GitHub App 安裝與 branch ruleset 配合。
+repo 內已有完整 workflow 定義，`credits` 的 GitHub Pages 也使用 GitHub Actions 部署。需要 credentials、跨 repo 寫入、留言、核准或合併的流程，仍取決於 repository secrets、variables、Google Workspace 權限、`SITCON Credits Assistant` GitHub App 安裝與 branch ruleset 配合。
 
 ## 自助 profile PR
 
@@ -74,7 +74,7 @@ flowchart TD
   artifact --> deploy["部署 GitHub Pages"]
 ```
 
-`Deploy GitHub Pages` 會在 push 到 `master` 或手動觸發時執行。它需要 `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret 讀取 canonical Sheet，並從 `credits-profiles` 讀取 contributor profile 與 `site-profiles` 顯示資料。workflow 會產生 `dist/`、上傳 Pages artifact，並交給 GitHub Pages 部署；repository 仍需要在 GitHub Pages 設定中使用 GitHub Actions 作為部署來源。
+`Deploy GitHub Pages` 會在 push 到 `master` 或手動觸發時執行。它需要 `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret 讀取 canonical Sheet，並從 `credits-profiles` 讀取 contributor profile 與 `site-profiles` 顯示資料。workflow 會產生 `dist/`、上傳 Pages artifact，並交給 GitHub Pages 部署；repository 的 Pages build type 是 GitHub Actions。
 
 Pages 網頁預設只提供公開索引查詢。貢獻者需要請維護者確認哪些項目可能是在記錄自己時，可以打開 [標記我的貢獻紀錄](http://sitcon.org/credits/?claim=1)；頁面會把選取結果保存在網址中，讓貢獻者直接分享該頁網址。這個 handoff 不會寫入 Google Sheets，也不會讓 profile PR 自動完成身份合併；維護者仍需在 canonical Sheet 中人工確認後，才可調整 `appearances.github_username`。
 
