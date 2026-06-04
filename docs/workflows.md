@@ -66,7 +66,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  push["push 到 credits master 或手動觸發"] --> checkout["checkout credits 與 credits-profiles"]
+  push["push 到 credits master、profile 更新 dispatch 或手動觸發"] --> checkout["checkout credits 與 credits-profiles"]
   checkout --> export["匯出 canonical Google Sheet"]
   export --> validate["驗證 exported data 與 site-profiles"]
   validate --> build["建立 dist 靜態網站"]
@@ -74,7 +74,7 @@ flowchart TD
   artifact --> deploy["部署 GitHub Pages"]
 ```
 
-`Deploy GitHub Pages` 會在 push 到 `master` 或手動觸發時執行。它需要 `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret 讀取 canonical Sheet，並從 `credits-profiles` 讀取 contributor profile 與 `site-profiles` 顯示資料。workflow 會產生 `dist/`、上傳 Pages artifact，並交給 GitHub Pages 部署；repository 的 Pages build type 是 GitHub Actions。
+`Deploy GitHub Pages` 會在 push 到 `master`、收到 `credits-profiles` 的 `rebuild-pages-from-profiles` dispatch，或手動觸發時執行。它需要 `GOOGLE_SERVICE_ACCOUNT_JSON` repository secret 讀取 canonical Sheet，並從 `credits-profiles` 讀取 contributor profile 與 `site-profiles` 顯示資料。workflow 會產生 `dist/`、上傳 Pages artifact，並交給 GitHub Pages 部署；repository 的 Pages build type 是 GitHub Actions。
 
 Pages 網頁預設只提供公開索引查詢。貢獻者需要請維護者確認哪些項目可能是在記錄自己時，可以打開 [標記我的貢獻紀錄](http://sitcon.org/credits/?claim=1)；頁面會把選取結果保存在網址中，讓貢獻者直接分享該頁網址。這個 handoff 不會寫入 Google Sheets，也不會讓 profile PR 自動完成身份合併；維護者仍需在 canonical Sheet 中人工確認後，才可調整 `appearances.github_username`。
 
