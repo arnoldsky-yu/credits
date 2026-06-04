@@ -101,6 +101,8 @@ Automation may create blank profile templates in `credits-profiles` for GitHub u
 
 Existing contributors may open a GitHub PR to create or fill their own profile and state which historical appearances they believe are theirs. Treat that PR as a signal of intent and evidence for maintainer review, not as automatic approval to merge identities or rewrite historical records.
 
+The GitHub Pages frontend may let contributors enter a query-gated claim mode, mark public index entries that they believe refer to themselves, and carry the resulting URL into a `credits-profiles` issue form. Treat those claim URLs the same way: they are contributor intent and maintainer-review evidence only, not identity-merge approval and not permission to change canonical appearances automatically.
+
 Before any self-service PR may be auto-accepted, the repository should have validation that confirms:
 
 - the PR author matches the GitHub username represented by the profile filename

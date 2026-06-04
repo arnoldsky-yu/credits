@@ -12,9 +12,10 @@ SITCON Credits（SITCON 貢獻紀錄）整理 SITCON 歷年公開的工作人員
 | 了解兩個 repo 的 GitHub Actions 如何互相觸發 | [自動化流程](docs/workflows.md) |
 | 維護 Google Sheets、匯出資料或設定 GitHub App | [維護者指南](docs/maintainer-guide.md) |
 | 新增或更新自己的公開 profile | [credits-profiles](https://github.com/sitcon-tw/credits-profiles) |
+| 標記可能是自己的歷史貢獻紀錄 | [標記我的貢獻紀錄](http://sitcon.org/credits/?claim=1) |
 | 查看 canonical Google Sheet | [SITCON Credits Google Sheet](https://docs.google.com/spreadsheets/d/1L2drpIE2ocZF3Stba9X0DnLGmYi_igeGWUhaQB_evsQ/edit?gid=0#gid=0) |
 
-GitHub Pages：workflow 已定義；實際公開網址依 repository Pages 設定為準。
+GitHub Pages：https://sitcon.org/credits/
 
 本地 prototype 可先用已匯出的 Sheets JSON 與 sibling `credits-profiles` checkout 產生：
 
@@ -23,6 +24,8 @@ pnpm site:build -- --export tmp/sheets-export/export.json
 ```
 
 這只會建立靜態 `dist/` 產物，不會讀取 Google credentials，也不代表 GitHub Pages 已正式部署。
+
+Pages 網頁預設是公開貢獻紀錄查詢介面，不顯示標記工具。過去參與 SITCON 相關活動的夥伴若要請維護者確認哪些項目可能是在記錄自己，可以打開 [標記我的貢獻紀錄](http://sitcon.org/credits/?claim=1)，選取項目後分享該頁網址。這個流程只收集本人意願與審核線索，不會自動修改 canonical Sheet，也不會自動完成身份連結。
 
 ## 這個 repo 負責什麼
 
@@ -54,6 +57,7 @@ pnpm site:build -- --export tmp/sheets-export/export.json
 - 補上歷屆活動官網中的工作人員與講者資料來源。
 - 回報錯字、來源 URL 錯誤、角色資料錯誤或疑似錯誤合併。
 - 在 `credits-profiles` 提出自己的個人簡介、公開連結或顯示名稱更新。
+- 到 Pages 網頁標記可能是自己的貢獻紀錄，並把分享網址交給維護者確認。
 - 協助整理 Google Sheets 欄位與維護流程。
 - 協助設計未來 GitHub Pages 前端查詢體驗。
 

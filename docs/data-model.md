@@ -96,7 +96,7 @@ Google Sheets 是整理、審核與發布前的主要維護介面。若歷屆官
 - 本人或他人在未審核 PR 中的敘述
 - LLM 推論或過往記憶
 
-本人提出 profile PR 並指出自己對應到哪些歷史 appearance，是建立關聯意願與審核線索，不是自動身份合併。若不確定是否為同一人，應先保持紀錄分開。
+本人提出 profile PR，或透過 Pages 網頁標記哪些公開紀錄可能是在記錄自己，是建立關聯意願與審核線索，不是自動身份合併。若不確定是否為同一人，應先保持紀錄分開。
 
 若某筆 appearance 目前使用 `site:<source_person_id>`，本人日後提出 `profiles/<github_username>.json` PR 時，維護者應人工確認後才把 Sheet 中的 profile reference 改成裸 GitHub username。不要把 `site:` reference 自動轉成 username。
 
