@@ -115,6 +115,7 @@ jobs:
           owner: sitcon-tw
           repositories: credits-profiles
           permission-issues: write
+          permission-pull-requests: write
 
       - name: Comment on published profile PR
         if: github.event_name == 'repository_dispatch' && github.event.client_payload.profile_pull_number && github.event.client_payload.profile_username
