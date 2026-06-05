@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
+import {
+  formatProfilePublishedComment,
+  isAssistantProfilePublishedComment,
+  parseArgs,
+} from './comment-published-profile.mjs';
+
+test('parseArgs reads published profile comment options', () => {
+  assert.deepEqual(parseArgs([
+    '--owner', 'sitcon-tw',
+    '--repo', 'credits-profiles',
+    '--pull-number', '58',
+    '--username', 'JadarTheObscurity',
+    '--assistant-login', 'sitcon-credits',
+  ]), {
+    owner: 'sitcon-tw',
+    repo: 'credits-profiles',
+    pullNumber: '58',
+    username: 'JadarTheObscurity',
+    assistantLogin: 'sitcon-credits',
+  });
+});
+
+test('formatProfilePublishedComment points to the deployed Credits profile anchor', () => {
+  const comment = formatProfilePublishedComment('JadarTheObscurity');
+
+  assert.match(comment, /sitcon-credits-profile-published/);
+  assert.match(comment, /已合併並部署/);
+  assert.match(comment, /https:\/\/sitcon\.org\/credits\/#person=JadarTheObscurity/);
+});
+
+test('isAssistantProfilePublishedComment ignores user marker comments', () => {
+  const body = formatProfilePublishedComment('octocat');
+
+  assert.equal(isAssistantProfilePublishedComment({
+    user: { login: 'denny0223' },
+    body,
+  }, 'sitcon-credits'), false);
+  assert.equal(isAssistantProfilePublishedComment({
+    user: { login: 'sitcon-credits[bot]' },
+    body,
+  }, 'sitcon-credits'), true);
+});

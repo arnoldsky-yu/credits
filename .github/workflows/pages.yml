@@ -94,3 +94,36 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Check out repository
+        if: github.event_name == 'repository_dispatch' && github.event.client_payload.profile_pull_number && github.event.client_payload.profile_username
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        if: github.event_name == 'repository_dispatch' && github.event.client_payload.profile_pull_number && github.event.client_payload.profile_username
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Create credits assistant token
+        if: github.event_name == 'repository_dispatch' && github.event.client_payload.profile_pull_number && github.event.client_payload.profile_username
+        id: credits-assistant-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SITCON_CREDITS_ASSISTANT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SITCON_CREDITS_ASSISTANT_APP_PRIVATE_KEY }}
+          owner: sitcon-tw
+          repositories: credits-profiles
+          permission-issues: write
+
+      - name: Comment on published profile PR
+        if: github.event_name == 'repository_dispatch' && github.event.client_payload.profile_pull_number && github.event.client_payload.profile_username
+        env:
+          GITHUB_TOKEN: ${{ steps.credits-assistant-token.outputs.token }}
+        run: >-
+          node scripts/profiles/comment-published-profile.mjs
+          --owner "sitcon-tw"
+          --repo "credits-profiles"
+          --pull-number "${{ github.event.client_payload.profile_pull_number }}"
+          --username "${{ github.event.client_payload.profile_username }}"
+          --assistant-login "${{ steps.credits-assistant-token.outputs.app-slug }}"
