@@ -1,0 +1,156 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
+import {
+  buildProfileClaimPlan,
+  buildSheetValueUpdates,
+  collectChangedProfileUsernames,
+  extractClaimUrls,
+  formatClaimCheckOutput,
+  parseClaimTokensFromUrl,
+} from './claim-confirmation.mjs';
+
+function pullRequest(body, headSha = 'head-sha') {
+  return {
+    number: 58,
+    body,
+    head: { sha: headSha },
+  };
+}
+
+function profileFile(username) {
+  return { filename: `profiles/${username}.json`, status: 'added' };
+}
+
+function exportPayload() {
+  return {
+    sheets: {
+      events: {
+        rows: [
+          { event_id: 'SITCON-2022', event_name_zh: 'SITCON 2022' },
+          { event_id: 'SITCON-2024', event_name_zh: 'SITCON 2024' },
+        ],
+      },
+      appearances: {
+        rows: [
+          {
+            _row: 2,
+            event_id: 'SITCON-2022',
+            display_name_at_event: 'Jadar',
+            role_group_zh: '議程',
+            role_title_zh: '講者',
+            github_username: 'site:fd7f60e68311eea3de7c840fd1f53b0a',
+          },
+          {
+            _row: 3,
+            event_id: 'SITCON-2024',
+            display_name_at_event: 'Jadar',
+            role_group_zh: '議程',
+            role_title_zh: '講者',
+            github_username: 'site:07b366482de4213eee9ec3e3d42c6c347c83eb3d726318b1e35eaa486d33b966',
+          },
+        ],
+      },
+    },
+  };
+}
+
+test('parseClaimTokensFromUrl accepts site claim tokens', () => {
+  const tokens = parseClaimTokensFromUrl(
+    'https://sitcon.org/credits/?claim=1&claims=SITCON-2022%2Fsite%3Afd7f60e68311eea3de7c840fd1f53b0a',
+  );
+
+  assert.deepEqual(tokens, [
+    {
+      raw: 'SITCON-2022/site:fd7f60e68311eea3de7c840fd1f53b0a',
+      eventId: 'SITCON-2022',
+      profileRef: 'site:fd7f60e68311eea3de7c840fd1f53b0a',
+    },
+  ]);
+});
+
+test('extractClaimUrls ignores non-claim links', () => {
+  assert.deepEqual(extractClaimUrls([
+    'See https://example.com/',
+    'https://sitcon.org/credits/?claim=1&claims=EVENT%2Fsite%3Asource-1',
+  ].join('\n')), [
+    'https://sitcon.org/credits/?claim=1&claims=EVENT%2Fsite%3Asource-1',
+  ]);
+});
+
+test('collectChangedProfileUsernames reads GitHub pull file shapes', () => {
+  assert.deepEqual(collectChangedProfileUsernames([
+    profileFile('JadarTheObscurity'),
+    { path: 'profiles/other.json', changeType: 'removed' },
+  ]), ['JadarTheObscurity']);
+});
+
+test('buildProfileClaimPlan creates updates for matching site refs', () => {
+  const plan = buildProfileClaimPlan({
+    pullRequest: pullRequest('https://sitcon.org/credits/?claim=1&claims=SITCON-2022%2Fsite%3Afd7f60e68311eea3de7c840fd1f53b0a%2CSITCON-2024%2Fsite%3A07b366482de4213eee9ec3e3d42c6c347c83eb3d726318b1e35eaa486d33b966'),
+    files: [profileFile('JadarTheObscurity')],
+    exportPayload: exportPayload(),
+  });
+
+  assert.equal(plan.status, 'ready');
+  assert.equal(plan.username, 'JadarTheObscurity');
+  assert.equal(plan.updates.length, 2);
+  assert.deepEqual(plan.updates.map((update) => update.rowNumber), [2, 3]);
+  assert(plan.planHash);
+});
+
+test('buildProfileClaimPlan blocks when a token no longer matches exactly', () => {
+  const plan = buildProfileClaimPlan({
+    pullRequest: pullRequest('https://sitcon.org/credits/?claim=1&claims=SITCON-2022%2Fsite%3Amissing'),
+    files: [profileFile('JadarTheObscurity')],
+    exportPayload: exportPayload(),
+  });
+
+  assert.equal(plan.status, 'blocked');
+  assert.equal(plan.reason, 'claim-token-mismatch');
+  assert.match(plan.issues[0].message, /找不到/);
+});
+
+test('buildSheetValueUpdates targets appearances github_username cells', () => {
+  const config = {
+    sheets: [
+      {
+        title: 'appearances',
+        columns: [
+          { name: 'event_id' },
+          { name: 'display_name_at_event' },
+          { name: 'github_username' },
+        ],
+      },
+    ],
+  };
+  const plan = {
+    updates: [
+      { rowNumber: 5, nextValue: 'octocat' },
+    ],
+  };
+
+  assert.deepEqual(buildSheetValueUpdates(config, plan), [
+    { range: "'appearances'!C5", values: [['octocat']] },
+  ]);
+});
+
+test('formatClaimCheckOutput includes an action-oriented summary', () => {
+  const output = formatClaimCheckOutput({
+    status: 'ready',
+    username: 'octocat',
+    updates: [
+      {
+        rowNumber: 2,
+        eventName: 'SITCON 2024',
+        displayNameAtEvent: 'Octo',
+        currentValue: 'site:source-1',
+        nextValue: 'octocat',
+      },
+    ],
+  });
+
+  assert.equal(output.conclusion, 'action_required');
+  assert.match(output.summary, /更新 Sheet/);
+  assert.match(output.summary, /site:source-1/);
+});

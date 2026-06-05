@@ -58,6 +58,7 @@ LLM agents 不應讀取 service account credentials，也不應在沒有明確�
 | `Export Sheets data` | 手動觸發 | 匯出 canonical Google Sheet、checkout `credits-profiles`、執行含 site profile 檢查的 `pnpm data:validate`、上傳 artifact，並直接 commit 缺少的空白 profile template 到 `credits-profiles`。 |
 | `Sync people helper` | `credits-profiles` repository dispatch、手動觸發 | 將 `credits-profiles` 的 profile username 與 display name 同步到 Google Sheets 的 `people` helper sheet。 |
 | `Review profile PR` | `credits-profiles` repository dispatch | 匯出 canonical Google Sheet，確認 profile PR 的 username 是否已出現在 `appearances.github_username`，符合條件時核准並 squash merge，不符合時留言提醒維護者。 |
+| `Apply profile claims` | `credits-profiles` Check Run action dispatch、手動觸發 | 維護者確認 PR 內的標記網址後，將仍符合的 `site:` appearances 改成該 profile PR 的裸 GitHub username，驗證後重跑 profile PR review。 |
 | `Deploy GitHub Pages` | `master` push、手動觸發 | 匯出 canonical Google Sheet、checkout `credits-profiles`、驗證資料與 site profile references、建立 `dist/`，並部署到 GitHub Pages。 |
 
 `CI` 不讀取 service account credentials、不連線 Google APIs，也不匯出 canonical Sheet。`Export Sheets data`、`Sync people helper`、`Review profile PR` 和 `Deploy GitHub Pages` 需要維護者先在 GitHub repository secrets 設定 `GOOGLE_SERVICE_ACCOUNT_JSON`。
@@ -68,6 +69,8 @@ LLM agents 不應讀取 service account credentials，也不應在沒有明確�
 - repository secret：`SITCON_CREDITS_ASSISTANT_APP_PRIVATE_KEY`
 
 這個 GitHub App 應安裝在 `sitcon-tw/credits` 與 `sitcon-tw/credits-profiles`，不應使用維護者個人 token。workflow 產生的 commit author 會固定為 `SITCON Credits Assistant`，committer 會使用 `sitcon-credits-assistant[bot]` 的 noreply email。
+
+`Review profile PR` 若看到 PR 內有 `?claim=1&claims=...` 標記網址，且標記可精準對到 canonical Sheet 中仍存在的 `site:` references，會建立 `Confirm Credits appearance links` Check Run。維護者按下「更新 Sheet」代表確認這些歷史 appearances 可連到該 PR 的 GitHub username；系統會重新匯出 Sheet、確認值仍完全符合、才寫回 `appearances.github_username`。若 GitHub 沒有觸發 Check Run action，可手動執行 `Apply profile claims` workflow，輸入 PR number 與 head SHA 使用同一套驗證。
 
 ## profile template 與 people helper
 

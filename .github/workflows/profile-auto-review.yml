@@ -63,8 +63,22 @@ jobs:
           owner: sitcon-tw
           repositories: credits-profiles
           permission-contents: write
+          permission-checks: write
           permission-issues: write
           permission-pull-requests: write
+
+      - name: Create profile claim confirmation check
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ steps.credits-assistant-token.outputs.token }}
+        run: >-
+          node scripts/profiles/create-claim-check.mjs
+          --owner "sitcon-tw"
+          --repo "credits-profiles"
+          --pull-number "${{ github.event.client_payload.pull_number }}"
+          --head-sha "${{ github.event.client_payload.head_sha }}"
+          --export "$RUNNER_TEMP/sheets-export/export.json"
+          --workflow-url "https://github.com/sitcon-tw/credits/actions/workflows/apply-profile-claims.yml"
 
       - name: Approve or comment on profile PR
         working-directory: tmp/credits-profiles

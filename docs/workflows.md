@@ -18,7 +18,11 @@ flowchart TD
   checkStatus -->|是| checkAppearance
   checkStatus -->|否| waitOrSkip["等待或略過自動審查"]
   checkAppearance -->|是| approveMerge["核准並 squash merge 到 credits-profiles"]
-  checkAppearance -->|否| maintainerComment["留言提醒維護者審查"]
+  checkAppearance -->|否| claimCheck{"PR 有可套用的標記網址？"}
+  claimCheck -->|是| confirmCheck["建立 Check Run 讓維護者確認"]
+  claimCheck -->|否| maintainerComment["留言提醒維護者審查"]
+  confirmCheck --> applyClaims["維護者點擊更新 Sheet"]
+  applyClaims --> review
   approveMerge --> merged["profile JSON merge 到 master"]
   merged --> syncDispatch["credits-profiles：dispatch sync-people-from-profiles"]
   syncDispatch --> syncPeople["credits：Sync people helper"]
@@ -32,7 +36,9 @@ flowchart TD
 - `Trusted profile review` 通過後 dispatch 到 `sitcon-tw/credits`，由 `Review profile PR` 在主 repo 的 secrets 之下匯出 canonical Google Sheet。
 - `Review profile PR` 會確認同一個 head SHA 的 `Check trusted profile PR` 與 `Check profile PR scope` 都成功，且 profile username 已以裸 GitHub username 形式存在於 `appearances.github_username`。
 - 符合條件時，workflow 會用 `SITCON Credits Assistant` GitHub App 核准並以 squash merge 合併 profile PR。
-- username 尚未出現在 canonical appearances 時，workflow 只會留言提醒維護者，不會自動建立身份連結。
+- username 尚未出現在 canonical appearances 時，若 PR 或 linked issue 內有可套用的 `site:` 標記網址，workflow 會在 PR 上建立 `Confirm Credits appearance links` Check Run，列出將從 `site:<source_person_id>` 改成該 GitHub username 的 canonical rows。
+- 維護者在 Check Run 按下「更新 Sheet」後，`credits-profiles` 會確認點擊者有 repository write、maintain 或 admin 權限，再 dispatch 到 `credits` 寫入 canonical Google Sheet。若 GitHub 沒有觸發 check action，可用 `Apply profile claims` workflow_dispatch fallback 輸入 PR number 與 head SHA。
+- 沒有可套用標記網址、標記與 canonical Sheet 不一致、或 Sheet 中有多筆可疑匹配時，workflow 只會留言提醒維護者人工審查。
 
 自動核准與合併只代表 profile PR 符合低風險自助更新條件，而且 username 已經被 canonical data 以裸值參照。它不代表 workflow 建立了新的身份合併，也不代表它處理了歷史資料更正、刪除 profile、rename profile 或隱私政策例外。`site:<source_person_id>` 不會讓 profile PR 自動通過。
 

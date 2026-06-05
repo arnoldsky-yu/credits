@@ -1,0 +1,166 @@
+name: Apply profile claims
+
+on:
+  repository_dispatch:
+    types:
+      - apply-profile-claims
+  workflow_dispatch:
+    inputs:
+      pull_number:
+        description: credits-profiles PR number
+        required: true
+        type: number
+      head_sha:
+        description: Expected PR head SHA
+        required: true
+        type: string
+      check_run_id:
+        description: Optional claim confirmation check run id
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    name: Apply confirmed profile claims
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out credits repository
+        uses: actions/checkout@v6
+
+      - name: Check out profiles repository
+        uses: actions/checkout@v6
+        with:
+          repository: sitcon-tw/credits-profiles
+          path: tmp/credits-profiles
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.18.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve request payload
+        id: payload
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const payload = context.payload.client_payload || {};
+            const inputs = context.payload.inputs || {};
+            const pullNumber = payload.pull_number || inputs.pull_number;
+            const headSha = payload.head_sha || inputs.head_sha;
+            const checkRunId = payload.check_run_id || inputs.check_run_id || '';
+            if (!pullNumber || !headSha) {
+              core.setFailed('pull_number and head_sha are required.');
+              return;
+            }
+            core.setOutput('pull_number', String(pullNumber));
+            core.setOutput('head_sha', String(headSha));
+            core.setOutput('check_run_id', String(checkRunId));
+
+      - name: Write Google service account credentials
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "GOOGLE_SERVICE_ACCOUNT_JSON repository secret is required." >&2
+            exit 1
+          fi
+          credentials_path="$RUNNER_TEMP/google-service-account.json"
+          printf '%s' "$GOOGLE_SERVICE_ACCOUNT_JSON" > "$credentials_path"
+          chmod 600 "$credentials_path"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$credentials_path" >> "$GITHUB_ENV"
+
+      - name: Export canonical Sheet data before apply
+        run: pnpm sheets:export --output-dir "$RUNNER_TEMP/sheets-export-before"
+
+      - name: Create credits assistant token
+        id: credits-assistant-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SITCON_CREDITS_ASSISTANT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SITCON_CREDITS_ASSISTANT_APP_PRIVATE_KEY }}
+          owner: sitcon-tw
+          repositories: credits-profiles
+          permission-checks: write
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: write
+
+      - name: Apply confirmed profile claims
+        env:
+          GITHUB_TOKEN: ${{ steps.credits-assistant-token.outputs.token }}
+          CHECK_RUN_ID: ${{ steps.payload.outputs.check_run_id }}
+        run: |
+          args=(
+            --owner "sitcon-tw"
+            --repo "credits-profiles"
+            --pull-number "${{ steps.payload.outputs.pull_number }}"
+            --head-sha "${{ steps.payload.outputs.head_sha }}"
+            --export "$RUNNER_TEMP/sheets-export-before/export.json"
+          )
+          if [ -n "$CHECK_RUN_ID" ]; then
+            args+=(--check-run-id "$CHECK_RUN_ID")
+          fi
+          node scripts/profiles/apply-claims.mjs "${args[@]}" --plan-output "$RUNNER_TEMP/profile-claim-plan.json" --apply
+
+      - name: Export canonical Sheet data after apply
+        run: pnpm sheets:export --output-dir "$RUNNER_TEMP/sheets-export-after"
+
+      - name: Validate canonical data
+        run: >-
+          pnpm data:validate
+          --export "$RUNNER_TEMP/sheets-export-after/export.json"
+          --site-profiles-dir tmp/credits-profiles/site-profiles
+
+      - name: Mark profile claim check successful
+        if: steps.payload.outputs.check_run_id != ''
+        env:
+          GITHUB_TOKEN: ${{ steps.credits-assistant-token.outputs.token }}
+        run: >-
+          node scripts/profiles/update-claim-check.mjs
+          --owner "sitcon-tw"
+          --repo "credits-profiles"
+          --check-run-id "${{ steps.payload.outputs.check_run_id }}"
+          --plan "$RUNNER_TEMP/profile-claim-plan.json"
+          --conclusion success
+
+      - name: Dispatch profile PR review
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'review-profile-pr',
+              client_payload: {
+                source_repository: 'sitcon-tw/credits-profiles',
+                pull_number: Number('${{ steps.payload.outputs.pull_number }}'),
+                head_sha: '${{ steps.payload.outputs.head_sha }}',
+              },
+            });
+
+      - name: Mark profile claim check failed
+        if: failure() && steps.payload.outputs.check_run_id != ''
+        env:
+          GITHUB_TOKEN: ${{ steps.credits-assistant-token.outputs.token }}
+        run: >-
+          node scripts/profiles/update-claim-check.mjs
+          --owner "sitcon-tw"
+          --repo "credits-profiles"
+          --check-run-id "${{ steps.payload.outputs.check_run_id }}"
+          --conclusion failure
+          --message "Apply profile claims workflow failed; check the workflow logs."
