@@ -5,6 +5,8 @@ import { getColumnNames, quoteSheetName, spreadsheetColumnName } from '../lib/sh
 export const CLAIM_CHECK_NAME = 'Confirm Credits appearance links';
 export const CLAIM_CHECK_ACTION_ID = 'apply-claims';
 export const CLAIM_CHECK_MARKER = '<!-- sitcon-credits-profile-claim-confirmation -->';
+export const CLAIM_COMMENT_APPLY_MARKER = '<!-- sitcon-credits-profile-claim-apply -->';
+export const CLAIM_COMMENT_METADATA_MARKER = 'sitcon-credits-profile-claim';
 
 const GITHUB_USERNAME_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
 const SITE_PROFILE_REF_PATTERN = /^site:[a-z0-9](?:[a-z0-9-]{0,128}[a-z0-9])?$/;
@@ -199,6 +201,49 @@ export function formatApplyFailureOutput(message) {
     text: '',
     conclusion: 'failure',
   };
+}
+
+export function formatClaimCommentBody(plan, options = {}) {
+  const metadata = {
+    pull_number: options.pullNumber,
+    head_sha: options.headSha,
+    plan_hash: plan.planHash ?? '',
+    username: plan.username ?? '',
+  };
+  const metadataComment = `<!-- ${CLAIM_COMMENT_METADATA_MARKER}: ${JSON.stringify(metadata)} -->`;
+
+  if (plan.status === 'ready') {
+    return [
+      CLAIM_CHECK_MARKER,
+      metadataComment,
+      '### 維護者確認歷史貢獻連結',
+      '',
+      `profile username: \`${plan.username}\``,
+      '',
+      '下列 canonical appearances 目前仍使用活動網站來源的 `site:` reference。若確認這些項目是在記錄此 PR 的使用者，請勾選下面的確認項目。',
+      '',
+      formatUpdatesTable(plan.updates),
+      '',
+      `- [ ] 我已確認上述 ${plan.updates.length} 筆歷史貢獻連結，請更新 SITCON Credits canonical Google Sheets。 ${CLAIM_COMMENT_APPLY_MARKER}`,
+      '',
+      '勾選後，系統會重新讀取 canonical Google Sheet，確認目前值仍完全符合上表的 `site:` reference，才會寫入裸 GitHub username。',
+    ].join('\n');
+  }
+
+  return [
+    CLAIM_CHECK_MARKER,
+    metadataComment,
+    '### 無法建立可套用的歷史貢獻連結確認',
+    '',
+    `profile username: \`${plan.username || 'unknown'}\``,
+    '',
+    `狀態：${plan.reason}`,
+    '',
+    plan.issues?.length ? formatIssues(plan.issues) : '',
+    plan.updates?.length ? formatUpdatesTable(plan.updates) : '',
+    '',
+    '請維護者人工檢查 PR 內的貢獻紀錄標記網址與 canonical Google Sheet。',
+  ].filter(Boolean).join('\n');
 }
 
 export function extractClaimUrls(text) {

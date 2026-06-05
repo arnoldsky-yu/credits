@@ -6,6 +6,7 @@ import {
   buildSheetValueUpdates,
   collectChangedProfileUsernames,
   extractClaimUrls,
+  formatClaimCommentBody,
   formatClaimCheckOutput,
   parseClaimTokensFromUrl,
 } from './claim-confirmation.mjs';
@@ -175,4 +176,30 @@ test('formatClaimCheckOutput includes an action-oriented summary', () => {
   assert.equal(output.conclusion, 'action_required');
   assert.match(output.summary, /更新 Sheet/);
   assert.match(output.summary, /site:source-1/);
+});
+
+test('formatClaimCommentBody includes maintainer checkbox and metadata', () => {
+  const body = formatClaimCommentBody({
+    status: 'ready',
+    username: 'octocat',
+    planHash: 'plan-hash',
+    updates: [
+      {
+        rowNumber: 2,
+        eventName: 'SITCON 2024',
+        displayNameAtEvent: 'Octo',
+        currentValue: 'site:source-1',
+        nextValue: 'octocat',
+      },
+    ],
+  }, {
+    pullNumber: 58,
+    headSha: 'head-sha',
+  });
+
+  assert.match(body, /sitcon-credits-profile-claim-confirmation/);
+  assert.match(body, /"pull_number":58/);
+  assert.match(body, /"head_sha":"head-sha"/);
+  assert.match(body, /- \[ \] 我已確認上述 1 筆歷史貢獻連結/);
+  assert.match(body, /sitcon-credits-profile-claim-apply/);
 });
