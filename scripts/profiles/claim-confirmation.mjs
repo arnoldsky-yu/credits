@@ -52,29 +52,28 @@ export function buildProfileClaimPlan({ pullRequest, files, sourceIssue = null, 
       String(row.event_id ?? '').trim() === token.eventId &&
       String(row.github_username ?? '').trim() === token.profileRef
     ));
-    if (matches.length !== 1) {
+    if (matches.length === 0) {
       issues.push({
         token: token.raw,
-        message: matches.length === 0
-          ? '找不到目前仍使用這個 site: reference 的 canonical appearance'
-          : 'canonical appearances 中有多筆相同 site: reference，需人工處理',
+        message: '找不到目前仍使用這個 site: reference 的 canonical appearance',
       });
       continue;
     }
 
-    const row = matches[0];
     const event = eventsById.get(token.eventId);
-    updates.push({
-      rowNumber: Number(row._row),
-      eventId: token.eventId,
-      eventName: event?.event_name_zh || event?.event_name_en || token.eventId,
-      displayNameAtEvent: String(row.display_name_at_event ?? '').trim(),
-      roleGroup: String(row.role_group_zh || row.role_group_en || '').trim(),
-      roleTitle: String(row.role_title_zh || row.role_title_en || '').trim(),
-      currentValue: token.profileRef,
-      nextValue: username,
-      token: token.raw,
-    });
+    for (const row of matches) {
+      updates.push({
+        rowNumber: Number(row._row),
+        eventId: token.eventId,
+        eventName: event?.event_name_zh || event?.event_name_en || token.eventId,
+        displayNameAtEvent: String(row.display_name_at_event ?? '').trim(),
+        roleGroup: String(row.role_group_zh || row.role_group_en || '').trim(),
+        roleTitle: String(row.role_title_zh || row.role_title_en || '').trim(),
+        currentValue: token.profileRef,
+        nextValue: username,
+        token: token.raw,
+      });
+    }
   }
 
   if (issues.length > 0) {

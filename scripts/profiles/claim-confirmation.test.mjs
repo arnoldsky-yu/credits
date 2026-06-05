@@ -99,6 +99,28 @@ test('buildProfileClaimPlan creates updates for matching site refs', () => {
   assert(plan.planHash);
 });
 
+test('buildProfileClaimPlan updates every row for a repeated event site ref', () => {
+  const payload = exportPayload();
+  payload.sheets.appearances.rows.push({
+    _row: 4,
+    event_id: 'SITCON-2022',
+    display_name_at_event: 'Jadar',
+    role_group_zh: '行政組',
+    role_title_zh: '組員',
+    github_username: 'site:fd7f60e68311eea3de7c840fd1f53b0a',
+  });
+
+  const plan = buildProfileClaimPlan({
+    pullRequest: pullRequest('https://sitcon.org/credits/?claim=1&claims=SITCON-2022%2Fsite%3Afd7f60e68311eea3de7c840fd1f53b0a'),
+    files: [profileFile('JadarTheObscurity')],
+    exportPayload: payload,
+  });
+
+  assert.equal(plan.status, 'ready');
+  assert.equal(plan.reason, 'ready');
+  assert.deepEqual(plan.updates.map((update) => update.rowNumber), [2, 4]);
+});
+
 test('buildProfileClaimPlan blocks when a token no longer matches exactly', () => {
   const plan = buildProfileClaimPlan({
     pullRequest: pullRequest('https://sitcon.org/credits/?claim=1&claims=SITCON-2022%2Fsite%3Amissing'),
